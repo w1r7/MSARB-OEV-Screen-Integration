@@ -3,113 +3,202 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MAX-SAFE DM1 Calculator and Trace Simulator</title>
+<title>MAX-SAFE DM1 Single-Packet Calculator</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=KoHo:wght@400;500;600;700&display=swap');
-  :root { --max-red:#CA202D; --max-gray:#404042; --max-light-gray:#F5F6F6; --max-black:#000000; --bg:#F5F6F6; --panel:#FFFFFF; --border:#D9DADA; --code-bg:#404042; --code-text:#F5F6F6; }
-  *{box-sizing:border-box} html{-webkit-text-size-adjust:100%} body{margin:0;font-family:'KoHo',Arial,sans-serif;background:var(--bg);color:var(--max-black);line-height:1.45}
+  :root{
+    --max-red:#CA202D; --max-gray:#404042; --max-light-gray:#F5F6F6; --max-black:#000000;
+    --bg:#F5F6F6; --panel:#FFFFFF; --border:#D9DADA; --code-bg:#404042; --code-text:#F5F6F6;
+    --ok:#2f7d32; --warn:#b77900;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;font-family:'KoHo',Arial,sans-serif;background:var(--bg);color:var(--max-black);line-height:1.45}
   header{padding:22px 18px;border-bottom:5px solid var(--max-red);background:var(--max-black);color:var(--max-light-gray)}
-  h1{margin:0 0 8px;font-size:clamp(24px,5vw,36px)} h2{margin-top:0;font-size:clamp(20px,4vw,26px)} h3{margin-bottom:8px;font-size:clamp(17px,3.4vw,21px)}
-  main{padding:16px;display:grid;gap:18px;max-width:1400px;margin:auto} section{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,.05)}
-  .tabs{display:flex;gap:8px;flex-wrap:wrap}.tab{border:1px solid var(--max-gray);background:#fff;color:var(--max-gray);border-radius:999px;padding:12px 16px;font-weight:700}.tab.active{background:var(--max-red);border-color:var(--max-red);color:#fff}.view{display:none}.view.active{display:grid;gap:18px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end} label{display:block;font-weight:700;margin-bottom:5px;color:var(--max-gray)}
-  input,select,button{border-radius:12px;border:1px solid var(--border);padding:12px;background:#fff;color:var(--max-black);font-family:'KoHo',Arial,sans-serif;font-size:16px} input,select{width:100%;min-height:46px} button{cursor:pointer;background:var(--max-red);border-color:var(--max-red);color:#fff;font-weight:700;min-height:46px}.secondary{background:var(--max-gray);border-color:var(--max-gray)}.danger{background:var(--max-black);border-color:var(--max-black)}
-  table{width:100%;border-collapse:collapse;margin:10px 0;display:block;overflow-x:auto;-webkit-overflow-scrolling:touch} th,td{border:1px solid var(--border);padding:9px;text-align:left;vertical-align:top} th{background:var(--max-gray);color:#fff}
-  code,pre{background:var(--code-bg);color:var(--code-text);border-radius:10px} code{padding:2px 6px} pre{padding:12px;overflow:auto;min-height:50px;-webkit-overflow-scrolling:touch}.muted{color:var(--max-gray)} header .muted{color:var(--max-light-gray);opacity:.9}.pill{display:inline-block;border-radius:999px;padding:3px 9px;background:var(--max-red);color:#fff;font-size:12px;font-weight:700}.fault{background:var(--max-light-gray);border:1px solid var(--border);border-left:6px solid var(--max-red);border-radius:14px;padding:12px;margin:10px 0}.trace{height:420px;overflow:auto;font-family:Consolas,'Courier New',monospace;white-space:pre;background:var(--max-black);color:var(--max-light-gray);border:1px solid var(--max-gray);border-radius:12px;padding:12px;-webkit-overflow-scrolling:touch}.small{font-size:13px}.simple-card{border:1px solid var(--border);border-radius:16px;padding:14px;background:var(--max-light-gray)}
+  h1{margin:0 0 8px;font-size:clamp(24px,5vw,36px)}
+  h2{margin-top:0;font-size:clamp(20px,4vw,26px)}
+  h3{margin-bottom:8px;font-size:clamp(17px,3.4vw,21px)}
+  main{padding:16px;display:grid;gap:18px;max-width:1400px;margin:auto}
+  section{background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,.05)}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .tab{border:1px solid var(--max-gray);background:#fff;color:var(--max-gray);border-radius:999px;padding:12px 16px;font-weight:700;cursor:pointer}
+  .tab.active{background:var(--max-red);border-color:var(--max-red);color:#fff}
+  .view{display:none}.view.active{display:grid;gap:18px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+  label{display:block;font-weight:700;margin-bottom:5px;color:var(--max-gray)}
+  input,select,button{border-radius:12px;border:1px solid var(--border);padding:12px;background:#fff;color:var(--max-black);font-family:'KoHo',Arial,sans-serif;font-size:16px}
+  input,select{width:100%;min-height:46px}
+  button{cursor:pointer;background:var(--max-red);border-color:var(--max-red);color:#fff;font-weight:700;min-height:46px}
+  .secondary{background:var(--max-gray);border-color:var(--max-gray)}
+  .danger{background:var(--max-black);border-color:var(--max-black)}
+  table{width:100%;border-collapse:collapse;margin:10px 0;display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  th,td{border:1px solid var(--border);padding:9px;text-align:left;vertical-align:top}
+  th{background:var(--max-gray);color:#fff}
+  code,pre{background:var(--code-bg);color:var(--code-text);border-radius:10px}
+  code{padding:2px 6px}
+  pre{padding:12px;overflow:auto;min-height:50px;-webkit-overflow-scrolling:touch}
+  .muted{color:var(--max-gray)} header .muted{color:var(--max-light-gray);opacity:.9}
+  .pill{display:inline-block;border-radius:999px;padding:4px 10px;background:var(--max-red);color:#fff;font-size:12px;font-weight:700}
+  .pill.gray{background:var(--max-gray)} .pill.ok{background:var(--ok)} .pill.warn{background:var(--warn)}
+  .fault{background:var(--max-light-gray);border:1px solid var(--border);border-left:6px solid var(--max-red);border-radius:14px;padding:12px;margin:10px 0}
+  .trace{height:420px;overflow:auto;font-family:Consolas,'Courier New',monospace;white-space:pre;background:var(--max-black);color:var(--max-light-gray);border:1px solid var(--max-gray);border-radius:12px;padding:12px;-webkit-overflow-scrolling:touch}
+  .small{font-size:13px}.simple-card{border:1px solid var(--border);border-radius:16px;padding:14px;background:var(--max-light-gray)}
+  .notice{border-left:6px solid var(--max-red);background:#fff5f5;padding:12px;border-radius:12px;margin:10px 0}
   @media(max-width:640px){main{padding:10px;gap:12px}section{padding:14px;border-radius:14px}.grid{grid-template-columns:1fr}.row{display:grid;grid-template-columns:1fr;align-items:stretch}.tabs{display:grid;grid-template-columns:1fr}button{width:100%}.trace{height:320px;font-size:12px}th,td{font-size:13px;padding:7px}}
 </style>
 </head>
 <body>
-<header><h1>MAX-SAFE DM1 Calculator and Live Trace Simulator</h1><div class="muted">Developer DM1 encoder plus a simple MAX-SAFE fault selector for viewers.</div></header>
+<header>
+  <h1>MAX-SAFE DM1 Calculator and Live Trace Simulator</h1>
+  <div class="muted">Single-packet DM1 only: one active DTC is transmitted per DM1 frame for this customer integration.</div>
+</header>
 <main>
-<section><div class="tabs"><button class="tab active" onclick="showView('viewer')">Simple Viewer</button><button class="tab" onclick="showView('developer')">Developer Calculator</button></div></section>
+<section>
+  <div class="tabs">
+    <button class="tab active" onclick="showView(event,'viewer')">Simple Viewer</button>
+    <button class="tab" onclick="showView(event,'developer')">Developer Calculator</button>
+  </div>
+</section>
 
 <div id="viewer" class="view active">
 <section>
   <h2>Simple MAX-SAFE Fault Selector</h2>
-  <p class="muted">Select a component and symptom. The tool adds the matching SPN/FMI and generates the trace. Duplicate SPN/FMI active faults are blocked.</p>
-  <div class="grid">
-    <div><label>Fault component</label><select id="simpleComponent" onchange="populateSymptoms()"></select></div>
-    <div><label>Symptom</label><select id="simpleSymptom"></select></div>
-    <div><label>Severity / lamp pattern</label><select id="simpleSeverity"><option value="amberSlow">Amber ON + slow flash</option><option value="amberNo">Amber ON + no flash</option><option value="redFast">Red Stop ON + fast flash</option><option value="protectNo">Protect ON + no flash</option></select></div>
+  <div class="simple-card">
+    <h3>How to use this</h3>
+    <p>Use this like a simple fault translator. First choose <strong>what failed</strong>, then choose <strong>how it failed</strong>. The tool shows the exact CAN message MAX-SAFE would transmit.</p>
+    <p class="muted small"><strong>SPN</strong> means the faulty component or signal. <strong>FMI</strong> means how it failed. For this customer, the trace uses <strong>single-packet DM1 only</strong>, so if several faults are added the live trace sends them one-by-one, one fault every second.</p>
   </div>
-  <div class="row" style="margin-top:12px"><button onclick="addSimpleFault()">Add selected fault</button><button class="secondary" onclick="loadSimpleExample()">Load example</button><button class="danger" onclick="clearFaults()">Clear faults</button></div>
+  <div class="grid" style="margin-top:14px">
+    <div><label>What failed?</label><select id="simpleComponent" onchange="populateSymptoms()"></select></div>
+    <div><label>How did it fail?</label><select id="simpleSymptom" onchange="renderSimpleInfo()"></select></div>
+  </div>
+  <div class="row" style="margin-top:12px">
+    <button onclick="addSimpleFault()">Add selected fault</button>
+    
+    <button class="danger" onclick="clearFaults()">Clear faults</button>
+  </div>
   <div id="simpleInfo" class="simple-card" style="margin-top:12px"></div>
-  <h3>Active faults</h3><div id="simpleActive"></div>
+  <h3>Active faults</h3>
+  <div id="simpleActive"></div>
 </section>
 <section>
-  <h2>Trace Output</h2>
+  <h2>Single-Packet DM1 Outcome</h2>
   <div id="summarySimple"></div>
-  <div class="row"><button onclick="startSim()">Start live trace</button><button class="secondary" onclick="stopSim()">Stop</button><button class="danger" onclick="clearTrace()">Clear trace</button></div>
-  <p class="muted small">One DTC is sent as single-frame DM1. Multiple DTCs are sent as BAM + TP.DT packets.</p>
+  <div class="row">
+    <button onclick="startSim()">Start live trace</button>
+    <button class="secondary" onclick="stopSim()">Stop</button>
+    <button class="danger" onclick="clearTrace()">Clear trace</button>
+  </div>
+  <p class="muted small">The live trace sends one single-packet DM1 frame per second. If multiple faults are active, it rotates through them one-by-one. You can add or remove faults while the trace is running.</p>
   <div class="trace" id="trace"></div>
 </section>
 </div>
 
 <div id="developer" class="view">
 <section>
-  <h2>1. Manual Method: How DM1 is Built</h2>
-  <div class="grid"><div><h3>CAN ID layout</h3><table><tr><th>Bits</th><th>Field</th><th>DM1 example</th></tr><tr><td>28-26</td><td>Priority</td><td>Usually 6 -> <code>0x18xxxxxx</code></td></tr><tr><td>25</td><td>Reserved</td><td>0</td></tr><tr><td>24</td><td>Data Page</td><td>0</td></tr><tr><td>23-16</td><td>PDU Format</td><td><code>FE</code></td></tr><tr><td>15-8</td><td>PDU Specific</td><td><code>CA</code></td></tr><tr><td>7-0</td><td>Source Address</td><td>Example <code>E7</code></td></tr></table><pre>Priority 6 + PGN FECA + SA E7 = 18FECAE7</pre></div><div><h3>DM1 data bytes</h3><table><tr><th>Byte</th><th>Contains</th></tr><tr><td>Data[0]</td><td>Lamp status, four 2-bit fields</td></tr><tr><td>Data[1]</td><td>Flash status, four 2-bit fields</td></tr><tr><td>Data[2]</td><td>SPN bits 0-7</td></tr><tr><td>Data[3]</td><td>SPN bits 8-15</td></tr><tr><td>Data[4]</td><td>SPN bits 16-18 in bits 0-2, FMI in bits 3-7</td></tr><tr><td>Data[5]</td><td>OC in bits 0-6, CM in bit 7</td></tr><tr><td>Data[6-7]</td><td>Unused/padding for one DTC</td></tr></table></div></div>
-  <h3>Lamp and flash bits</h3><table><tr><th>Byte</th><th>Bits</th><th>Lamp</th><th>When to use</th></tr><tr><td>Data[0]</td><td>0-1</td><td>Protect Lamp</td><td>Protection mode or safety system protection action.</td></tr><tr><td>Data[0]</td><td>2-3</td><td>Amber Warning Lamp</td><td>Warning/service fault, degraded but not immediate stop.</td></tr><tr><td>Data[0]</td><td>4-5</td><td>Red Stop Lamp</td><td>Critical fault, stop or do not operate.</td></tr><tr><td>Data[0]</td><td>6-7</td><td>MIL</td><td>Emissions/regulatory; normally not used by MAX-SAFE.</td></tr><tr><td>Data[1]</td><td>0-1</td><td>Protect flash</td><td>Flash pattern for Protect Lamp.</td></tr><tr><td>Data[1]</td><td>2-3</td><td>Amber flash</td><td>Flash pattern for Amber Lamp.</td></tr><tr><td>Data[1]</td><td>4-5</td><td>Red Stop flash</td><td>Flash pattern for Red Stop Lamp.</td></tr><tr><td>Data[1]</td><td>6-7</td><td>MIL flash</td><td>Flash pattern for MIL.</td></tr></table>
+  <h2>1. Manual Method: How Single-Packet DM1 is Built</h2>
+  <div class="grid">
+    <div>
+      <h3>CAN ID layout</h3>
+      <table><tr><th>Bits</th><th>Field</th><th>DM1 example</th></tr><tr><td>28-26</td><td>Priority</td><td>Usually 6 -> <code>0x18xxxxxx</code></td></tr><tr><td>25</td><td>Reserved</td><td>0</td></tr><tr><td>24</td><td>Data Page</td><td>0</td></tr><tr><td>23-16</td><td>PDU Format</td><td><code>FE</code></td></tr><tr><td>15-8</td><td>PDU Specific</td><td><code>CA</code></td></tr><tr><td>7-0</td><td>Source Address</td><td>Example <code>E7</code></td></tr></table>
+      <pre>Priority 6 + PGN FECA + SA E7 = 18FECAE7</pre>
+    </div>
+    <div>
+      <h3>DM1 data bytes</h3>
+      <table><tr><th>Byte</th><th>Contains</th></tr><tr><td>Data[0]</td><td>Lamp status, four 2-bit fields</td></tr><tr><td>Data[1]</td><td>Flash status, four 2-bit fields</td></tr><tr><td>Data[2]</td><td>SPN bits 0-7</td></tr><tr><td>Data[3]</td><td>SPN bits 8-15</td></tr><tr><td>Data[4]</td><td>SPN bits 16-18 in bits 0-2, FMI in bits 3-7</td></tr><tr><td>Data[5]</td><td>OC in bits 0-6, CM in bit 7</td></tr><tr><td>Data[6-7]</td><td>Unused/padding for one DTC</td></tr></table>
+    </div>
+  </div>
+  <div class="notice"><strong>Customer restriction:</strong> this version does not generate BAM / multi-packet DM1. If multiple faults are active, MAX-SAFE rotates them one-by-one as single-packet DM1 frames, one fault per second. No BAM / multi-packet DM1 is generated.</div>
 </section>
 <section>
   <h2>2. Developer Inputs</h2>
-  <div class="grid"><div><label>Source Address SA hex</label><input id="sa" value="E7" maxlength="2" /></div><div><label>Priority</label><input id="priority" type="number" min="0" max="7" value="6" /></div><div><label>Occurrence Count OC</label><input id="oc" type="number" min="0" max="126" value="1" /></div><div><label>Transmit rate ms</label><input id="rate" type="number" min="100" value="1000" /></div></div>
-  <h3>New fault quick add</h3><div class="grid"><div><label>SPN</label><input id="newSpn" type="number" min="0" max="524287" value="168" /></div><div><label>FMI</label><select id="newFmi"></select></div></div>
-  <h3>Lamp status</h3><div class="grid"><div><label>Protect Lamp</label><select id="lampProtect"></select></div><div><label>Amber Warning Lamp</label><select id="lampAmber"></select></div><div><label>Red Stop Lamp</label><select id="lampRed"></select></div><div><label>MIL</label><select id="lampMil"></select></div></div>
-  <h3>Flash status</h3><div class="grid"><div><label>Protect Flash</label><select id="flashProtect"></select></div><div><label>Amber Flash</label><select id="flashAmber"></select></div><div><label>Red Stop Flash</label><select id="flashRed"></select></div><div><label>MIL Flash</label><select id="flashMil"></select></div></div>
+  <div class="grid">
+    <div><label>Source Address SA hex</label><input id="sa" value="E7" maxlength="2" /></div>
+    <div><label>Priority</label><input id="priority" type="number" min="0" max="7" value="6" /></div>
+    <div><label>Occurrence Count OC</label><input id="oc" type="number" min="0" max="126" value="1" /></div>
+    <div><label>Transmit rate ms</label><input id="rate" type="number" min="100" value="1000" /></div>
+  </div>
+  <h3>Fault quick add</h3>
+  <div class="grid">
+    <div><label>What failed?</label><select id="devComponent" onchange="populateDevSymptoms()"></select></div>
+    <div><label>How it failed?</label><select id="devSymptom"></select></div>
+  </div>
+  <div class="row" style="margin-top:12px"><button onclick="addDevMappedFault()">Add mapped fault</button></div>
+  <h3>Manual fault add</h3>
+  <div class="grid"><div><label>SPN</label><input id="newSpn" type="number" min="0" max="524287" placeholder="Enter SPN" /></div><div><label>FMI</label><select id="newFmi"></select></div><div><label>Criticality</label><select id="manualCrit"><option value="Low">Low</option><option value="Medium" selected>Medium</option><option value="High">High</option></select></div></div>
 </section>
-<section><h2>3. Faults</h2><div class="row"><button onclick="addFault()">Add fault</button><button class="secondary" onclick="loadExample()">Load two-fault example</button><button class="danger" onclick="clearFaults()">Clear faults</button></div><div id="faults"></div></section>
-<section><h2>4. Calculated CAN Message</h2><div id="summary"></div><h3>Byte table</h3><div id="byteTable"></div><h3>Manual calculation details</h3><pre id="manual"></pre></section>
-<section><h2>5. Developer Live Trace Simulator</h2><div class="row"><button onclick="startSim()">Start</button><button class="secondary" onclick="stopSim()">Stop</button><button class="danger" onclick="clearTrace()">Clear trace</button></div><div class="trace" id="traceDev"></div></section>
+<section>
+  <h2>3. Active Faults</h2>
+  <div class="row"><button onclick="addFault()">Add manual fault</button><button class="danger" onclick="clearFaults()">Clear faults</button></div>
+  <div id="faults"></div>
+</section>
+<section>
+  <h2>4. Calculated Single-Packet CAN Message</h2>
+  <div id="summary"></div>
+  <h3>Byte table</h3><div id="byteTable"></div>
+  <h3>Manual calculation details</h3><pre id="manual"></pre>
+</section>
+<section>
+  <h2>5. Developer Live Trace Simulator</h2>
+  <div class="row"><button onclick="startSim()">Start</button><button class="secondary" onclick="stopSim()">Stop</button><button class="danger" onclick="clearTrace()">Clear trace</button></div>
+  <div class="trace" id="traceDev"></div>
+</section>
 </div>
 </main>
 <script>
 const fmiOptions=[[0,'Data valid but above normal operational range - most severe'],[1,'Data valid but below normal operational range - most severe'],[2,'Data erratic, intermittent, or incorrect'],[3,'Voltage above normal or shorted high'],[4,'Voltage below normal or shorted low'],[5,'Current below normal or open circuit'],[6,'Current above normal or grounded circuit'],[7,'Mechanical system not responding properly'],[8,'Abnormal frequency, pulse width, or period'],[9,'Abnormal update rate'],[10,'Abnormal rate of change'],[11,'Root cause not known'],[12,'Bad intelligent device or component'],[13,'Out of calibration'],[14,'Special instructions'],[15,'Data valid but above normal operational range - least severe'],[16,'Data valid but above normal operational range - moderately severe'],[17,'Data valid but below normal operational range - least severe'],[18,'Data valid but below normal operational range - moderately severe'],[19,'Received network data in error'],[31,'Condition exists']];
-const lampStatusOptions=[[0,'0 - Off'],[1,'1 - On'],[2,'2 - Reserved'],[3,'3 - Not available']];
-const flashOptions=[[0,'0 - No flash'],[1,'1 - Slow flash'],[2,'2 - Fast flash'],[3,'3 - Not available']];
-const simpleFaults={
- 'Ignition':[{name:'Lose of ignition',spn:158,fmi:4,clear:'Seeing ignition ON'}],
- 'GPS':[{name:'GPS signal quality fault',spn:520001,fmi:1,prop:true,clear:'Seeing medium level of GPS quality signal'}],
- 'CAN':[{name:'CAN communication fault',spn:520002,fmi:9,prop:true,clear:'Receiving a valid CAN message'}],
- 'Speed':[{name:'No speed',spn:84,fmi:9,clear:'Valid speed message received'},{name:'Speed calibration',spn:84,fmi:19,clear:'Ignition OFF? / calibration corrected'}],
- 'Seat':[{name:'Open circuit',spn:1504,fmi:5,clear:'Correction of O/C'},{name:'Short circuit',spn:1504,fmi:3,clear:'Valid signal voltage'}],
- 'Door':[{name:'Open circuit',spn:1821,fmi:5,clear:'Signal change'},{name:'Short circuit',spn:1821,fmi:3,clear:'Signal change'}],
- 'Reset switch':[{name:'Open circuit',spn:70,fmi:5,note:'SPN may become proprietary after review',clear:'Correction of O/C via recognised switch signal'},{name:'Short circuit',spn:70,fmi:3,note:'SPN may become proprietary after review',clear:'Correction of short'}],
- 'Buckle':[{name:'Open circuit',spn:1856,fmi:5,clear:'Correction of O/C and valid buckle state'}],
- 'Horn':[{name:'Open circuit',spn:520003,fmi:5,prop:true,clear:'Correction of O/C'},{name:'Over current',spn:520003,fmi:6,prop:true,clear:'Horn activation with correct current or ignition cycle to OFF?'}],
- 'AUX':[{name:'Over current',spn:2386,fmi:6,clear:'AUX activation with correct current or ignition cycle to OFF?'}],
- 'Valve':[{name:'Open circuit',spn:619,fmi:5,clear:'Correction of O/C'},{name:'Short to +',spn:619,fmi:3,clear:'Correction of condition'},{name:'Short to -',spn:619,fmi:4,clear:'Correction of condition'},{name:'Under current',spn:619,fmi:5,clear:'Valve activation with correct current'},{name:'Over current',spn:619,fmi:6,clear:'Valve activation with correct current'},{name:'Max current',spn:619,fmi:6,clear:'Valve activation with correct current'}],
- 'System voltage':[{name:'Low voltage',spn:168,fmi:4,clear:'Voltage within correct range > 10V'}]
+const faultMap={
+ 'Ignition':[{symptom:'Loss of Ignition',spn:158,fmi:4,crit:'Medium',lamp:'Amber Warning Lamp',flash:'Slow Flash'}],
+ 'GPS Fault':[{symptom:'Invalid / low quality',spn:520001,fmi:2,prop:true,crit:'Low',lamp:'Amber Warning Lamp',flash:'Slow Flash'}],
+ 'CAN Fault':[{symptom:'Loss of CAN',spn:520002,fmi:9,prop:true,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'}],
+ 'Speed Fault':[{symptom:'Invalid',spn:84,fmi:9,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'}],
+ 'Seat Fault':[{symptom:'Open Circuit',spn:1504,fmi:4,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'},{symptom:'Short Circuit',spn:1504,fmi:3,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'}],
+ 'Door Fault':[{symptom:'Loss / Voltage High',spn:1821,fmi:3,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'},{symptom:'Voltage below normal',spn:1821,fmi:4,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'}],
+ 'Reset Switch':[{symptom:'Open Circuit',spn:70,fmi:5,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'},{symptom:'Short Circuit',spn:70,fmi:3,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'}],
+ 'Buckle Fault':[{symptom:'Open Circuit',spn:1856,fmi:5,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'}],
+ 'Horn Fault':[{symptom:'Open Circuit / Low Voltage',spn:520003,fmi:5,prop:true,crit:'Medium',lamp:'Amber Warning Lamp',flash:'Slow Flash'},{symptom:'Overcurrent',spn:520003,fmi:6,prop:true,crit:'Medium',lamp:'Amber Warning Lamp',flash:'Slow Flash'}],
+ 'AUX':[{symptom:'Overcurrent',spn:2386,fmi:6,crit:'Low',lamp:'Amber Warning Lamp',flash:'Slow Flash'}],
+ 'Valve':[{symptom:'Open Circuit',spn:619,fmi:5,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'},{symptom:'Short to Positive',spn:619,fmi:3,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'},{symptom:'Short to Negative',spn:619,fmi:4,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'},{symptom:'Undercurrent',spn:619,fmi:5,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'},{symptom:'Overcurrent',spn:619,fmi:6,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'},{symptom:'MAX current',spn:619,fmi:6,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'}],
+ 'System Voltage':[{symptom:'Low Voltage',spn:168,fmi:4,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'}]
 };
+const critRank={High:3,Medium:2,Low:1};
 let faults=[]; let simTimer=null; let simStart=null; let duplicateWarning='';
-function hex(n,w=2){return (n>>>0).toString(16).toUpperCase().padStart(w,'0')} function parseHexByte(s){let n=parseInt(String(s).trim(),16);return Number.isNaN(n)||n<0||n>255?0:n}
-function fillSelect(id,options,selected=0){const el=document.getElementById(id); if(!el)return; el.innerHTML=''; options.forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;if(v===selected)o.selected=true;el.appendChild(o)})}
-function showView(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));event.target.classList.add('active')}
-function init(){fillSelect('newFmi',fmiOptions,4);['lampProtect','lampAmber','lampRed','lampMil'].forEach(id=>fillSelect(id,lampStatusOptions,id==='lampAmber'?1:0));['flashProtect','flashAmber','flashRed','flashMil'].forEach(id=>fillSelect(id,flashOptions,id==='flashAmber'?1:0));const comp=document.getElementById('simpleComponent');Object.keys(simpleFaults).forEach(k=>{let o=document.createElement('option');o.value=k;o.textContent=k;comp.appendChild(o)});populateSymptoms();loadSimpleExample();document.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',render))}
-function populateSymptoms(){const c=document.getElementById('simpleComponent').value;const s=document.getElementById('simpleSymptom');s.innerHTML='';simpleFaults[c].forEach((f,i)=>{let o=document.createElement('option');o.value=i;o.textContent=`${f.name} - SPN ${f.prop?'Proprietary '+f.spn:f.spn}, FMI ${f.fmi}`;s.appendChild(o)});renderSimpleInfo()}
-function renderSimpleInfo(){const c=document.getElementById('simpleComponent')?.value;const idx=parseInt(document.getElementById('simpleSymptom')?.value||0);if(!c)return;const f=simpleFaults[c][idx];document.getElementById('simpleInfo').innerHTML=`<strong>${c}: ${f.name}</strong><br>SPN: ${f.prop?'Proprietary placeholder ':''}${f.spn} &nbsp; FMI: ${f.fmi} - ${fmiText(f.fmi)}<br><span class="muted">Clearing: ${f.clear||'TBD'} ${f.note?'<br>Note: '+f.note:''}</span>`}
-function fmiText(v){return (fmiOptions.find(x=>x[0]===v)||['',''])[1]}
-function applySeverity(){const sev=document.getElementById('simpleSeverity').value;['lampProtect','lampAmber','lampRed','lampMil'].forEach(id=>document.getElementById(id).value=0);['flashProtect','flashAmber','flashRed','flashMil'].forEach(id=>document.getElementById(id).value=0);if(sev==='amberSlow'){lampAmber.value=1;flashAmber.value=1}else if(sev==='amberNo'){lampAmber.value=1}else if(sev==='redFast'){lampRed.value=1;flashRed.value=2}else if(sev==='protectNo'){lampProtect.value=1}}
-function addSimpleFault(){applySeverity();const c=simpleComponent.value;const f=simpleFaults[c][parseInt(simpleSymptom.value||0)];addFault(f.spn,f.fmi,c+' - '+f.name,f.clear,f.prop)}
-function loadSimpleExample(){clearFaults(false);applySeverity();addFault(168,4,'System voltage - Low voltage','Voltage within correct range > 10V',false);addFault(1856,5,'Buckle - Open circuit','Correction of O/C and valid buckle state',false)}
-function faultKey(spn,fmi){return `${parseInt(spn)||0}:${parseInt(fmi)||0}`} function hasDuplicateFault(spn,fmi,ignore=-1){const key=faultKey(spn,fmi);return faults.some((f,i)=>i!==ignore&&faultKey(f.spn,f.fmi)===key)}
-function addFault(spn=168,fmi=4,label='',clear='',prop=false){const newSpn=parseInt(document.getElementById('newSpn')?.value||spn)||0;const newFmi=parseInt(document.getElementById('newFmi')?.value||fmi)||0;const useSpn=arguments.length?parseInt(spn)||0:newSpn;const useFmi=arguments.length?parseInt(fmi)||0:newFmi;if(hasDuplicateFault(useSpn,useFmi)){duplicateWarning=`Fault SPN ${useSpn} FMI ${useFmi} already exists. Duplicate active DTCs are not added.`}else{faults.push({spn:useSpn,fmi:useFmi,label,clear,prop});duplicateWarning=''}renderFaults();render()}
-function clearFaults(doRender=true){faults=[];duplicateWarning='';if(doRender){renderFaults();render()}}
-function loadExample(){clearFaults(false);addFault(168,4,'System voltage - Low voltage','Voltage within correct range > 10V');addFault(1856,5,'Buckle - Open circuit','Correction of O/C and valid buckle state')}
-function renderFaults(){['faults','simpleActive'].forEach(id=>{const box=document.getElementById(id);if(!box)return;box.innerHTML='';if(duplicateWarning)box.innerHTML+=`<div class="fault"><strong>Duplicate blocked:</strong> ${duplicateWarning}</div>`;faults.forEach((f,i)=>{const dup=hasDuplicateFault(f.spn,f.fmi,i);box.innerHTML+=`<div class="fault"><strong>${f.label||'Fault '+(i+1)}</strong><br>SPN ${f.prop?'Proprietary ':''}${f.spn}, FMI ${f.fmi} - ${fmiText(f.fmi)}${f.clear?'<br><span class="muted">Clearing: '+f.clear+'</span>':''}${dup?'<p><strong>Duplicate:</strong> ignored in message.</p>':''}<div class="grid" style="margin-top:8px"><div><label>SPN</label><input type="number" value="${f.spn}" oninput="updateFault(${i},'spn',this.value)"></div><div><label>FMI</label><select onchange="updateFault(${i},'fmi',this.value)">${fmiOptions.map(([v,t])=>`<option value="${v}" ${v===f.fmi?'selected':''}>${v} - ${t}</option>`).join('')}</select></div></div><button class="danger" style="margin-top:10px" onclick="faults.splice(${i},1);duplicateWarning='';renderFaults();render();">Remove</button></div>`})})}
-function updateFault(i,field,value){const cand={...faults[i],[field]:parseInt(value)||0};duplicateWarning=hasDuplicateFault(cand.spn,cand.fmi,i)?`Fault SPN ${cand.spn} FMI ${cand.fmi} already exists. This duplicate will be ignored until changed.`:'';faults[i][field]=cand[field];renderFaults();render()}
-function uniqueFaults(){const seen=new Set(),out=[];faults.forEach(f=>{const k=faultKey(f.spn,f.fmi);if(!seen.has(k)){seen.add(k);out.push(f)}});return out}
-function getLampByte(prefix){return parseInt(document.getElementById(prefix+'Protect').value)|(parseInt(document.getElementById(prefix+'Amber').value)<<2)|(parseInt(document.getElementById(prefix+'Red').value)<<4)|(parseInt(document.getElementById(prefix+'Mil').value)<<6)}
-function dtcBytes(spn,fmi,oc){spn=Math.max(0,Math.min(0x7FFFF,spn|0));fmi=fmi&0x1F;oc=Math.max(0,Math.min(126,oc|0));return [spn&0xFF,(spn>>8)&0xFF,((spn>>16)&7)|(fmi<<3),oc&0x7F]}
-function calc(){const sa=parseHexByte(saEl().value),pri=parseInt(priority.value),oc=parseInt(document.getElementById('oc').value)||0;const canId=((pri&7)<<26)|(0xFECA<<8)|sa;let payload=[getLampByte('lamp'),getLampByte('flash')];const active=uniqueFaults();active.forEach(f=>payload.push(...dtcBytes(parseInt(f.spn)||0,parseInt(f.fmi)||0,oc)));if(!active.length)payload=[payload[0],payload[1],0xFF,0xFF,0xFF,0xFF,0xFF,0xFF];return{sa,pri,oc,canId,payload,activeFaults:active}}
-function saEl(){return document.getElementById('sa')}
-function render(){renderSimpleInfo();const c=calc();const single=c.payload.length<=8;const data=single?c.payload.concat(Array(8-c.payload.length).fill(0xFF)):c.payload;const summaryHtml=`<p><span class="pill">${single?'Single-frame DM1':'Multi-packet DM1 using BAM'}</span></p><pre>CAN ID: ${hex(c.canId,8)}\nPayload: ${data.map(b=>hex(b)).join(' ')}</pre>`;document.getElementById('summary').innerHTML=summaryHtml;document.getElementById('summarySimple').innerHTML=summaryHtml;let rows='';data.forEach((b,i)=>rows+=`<tr><td>Data[${i}]</td><td>${hex(b)}</td><td>${b.toString(2).padStart(8,'0')}</td><td>${i===0?'Lamp status':i===1?'Flash status':'DTC payload byte'}</td></tr>`);document.getElementById('byteTable').innerHTML=`<table><tr><th>Byte</th><th>Hex</th><th>Binary</th><th>Contains</th></tr>${rows}</table>`;let m=[`CAN ID = (priority << 26) | (0xFECA << 8) | SA`,`       = (${c.pri} << 26) | 0x00FECA00 | 0x${hex(c.sa)}`,`       = 0x${hex(c.canId,8)}`,'',`Data[0] lamp byte = 0x${hex(c.payload[0]||0)}`,`Data[1] flash byte = 0x${hex(c.payload[1]||0)}`];c.activeFaults.forEach((f,i)=>{const bytes=dtcBytes(parseInt(f.spn)||0,parseInt(f.fmi)||0,c.oc);m.push('',`DTC ${i+1}: SPN ${f.spn}, FMI ${f.fmi}, OC ${c.oc}`,`SPN hex = 0x${hex(parseInt(f.spn)||0,5)}`,`DTC bytes = ${bytes.map(b=>hex(b)).join(' ')}`)});if(!single)m.push('',`Payload length ${c.payload.length} bytes > 8, so use BAM. Packets = ${Math.ceil(c.payload.length/7)}`);document.getElementById('manual').textContent=m.join('\n')}
-function frames(){const c=calc();if(c.payload.length<=8){return [[hex(c.canId,8),c.payload.concat(Array(8-c.payload.length).fill(0xFF))]]}const priPrefix=(c.pri&7)<<26;const cmId=priPrefix|(0xEC00<<8)|(0xFF<<8)|c.sa;const dtId=priPrefix|(0xEB00<<8)|(0xFF<<8)|c.sa;const len=c.payload.length,packets=Math.ceil(len/7),out=[[hex(cmId,8),[0x20,len&0xFF,(len>>8)&0xFF,packets,0xFF,0xCA,0xFE,0x00]]];for(let i=0;i<packets;i++){const chunk=c.payload.slice(i*7,i*7+7);while(chunk.length<7)chunk.push(0xFF);out.push([hex(dtId,8),[i+1,...chunk]])}return out}
+function hex(n,w=2){return (n>>>0).toString(16).toUpperCase().padStart(w,'0')}
+function parseHexByte(s){let n=parseInt(String(s||'').trim(),16);return Number.isNaN(n)||n<0||n>255?0:n}
+function fmiText(v){return (fmiOptions.find(x=>x[0]===v)||['','Unknown FMI'])[1]}
+function fillSelect(id,options,selected=''){const el=document.getElementById(id); if(!el)return; el.innerHTML=''; options.forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;if(String(v)===String(selected))o.selected=true;el.appendChild(o)})}
+function showView(e,id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));e.target.classList.add('active')}
+function init(){fillSelect('newFmi',fmiOptions,'4'); populateComponents('simpleComponent'); populateComponents('devComponent'); populateSymptoms(); populateDevSymptoms(); document.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',render)); clearTrace(); clearFaults();}
+function populateComponents(id){const el=document.getElementById(id); if(!el)return; el.innerHTML='<option value="">Select...</option>'; Object.keys(faultMap).forEach(k=>{let o=document.createElement('option');o.value=k;o.textContent=k;el.appendChild(o)})}
+function populateSymptoms(){const c=document.getElementById('simpleComponent').value; const s=document.getElementById('simpleSymptom'); s.innerHTML='<option value="">Select...</option>'; if(c){faultMap[c].forEach((f,i)=>{let o=document.createElement('option');o.value=i;o.textContent=f.symptom;s.appendChild(o)})} renderSimpleInfo(); render();}
+function populateDevSymptoms(){const c=document.getElementById('devComponent').value; const s=document.getElementById('devSymptom'); s.innerHTML='<option value="">Select...</option>'; if(c){faultMap[c].forEach((f,i)=>{let o=document.createElement('option');o.value=i;o.textContent=`${f.symptom} - SPN ${f.prop?'Proprietary '+f.spn:f.spn}, FMI ${f.fmi}`;s.appendChild(o)})}}
+function selectedSimpleFault(){const c=document.getElementById('simpleComponent').value; const idx=document.getElementById('simpleSymptom').value; if(!c||idx==='')return null; return {...faultMap[c][parseInt(idx)],component:c,label:c+' - '+faultMap[c][parseInt(idx)].symptom};}
+function selectedDevFault(){const c=document.getElementById('devComponent').value; const idx=document.getElementById('devSymptom').value; if(!c||idx==='')return null; return {...faultMap[c][parseInt(idx)],component:c,label:c+' - '+faultMap[c][parseInt(idx)].symptom};}
+function renderSimpleInfo(){const f=selectedSimpleFault(); const box=document.getElementById('simpleInfo'); if(!f){box.innerHTML='<strong>No fault selected.</strong><br><span class="muted">Start by selecting what failed and how it failed.</span>';return} box.innerHTML=`<strong>${f.label}</strong><br>SPN: ${f.prop?'Proprietary placeholder ':''}${f.spn} ${!f.prop?'[0x'+hex(f.spn, f.spn>255?3:2)+']':''}<br>FMI: ${f.fmi} - ${fmiText(f.fmi)}<br>Criticality: <strong>${f.crit}</strong><br>Lamp status: <strong>${f.lamp}</strong><br>Lamp flash: <strong>${f.flash}</strong>`;}
+function addSimpleFault(){const f=selectedSimpleFault(); if(!f){duplicateWarning='Select what failed and how it failed first.'; renderFaults(); return} addFaultObj(f)}
+function addDevMappedFault(){const f=selectedDevFault(); if(!f){duplicateWarning='Select a mapped fault first.'; renderFaults(); return} addFaultObj(f)}
+function faultKey(spn,fmi){return `${parseInt(spn)||0}:${parseInt(fmi)||0}`}
+function hasDuplicateFault(spn,fmi,ignore=-1){const key=faultKey(spn,fmi);return faults.some((f,i)=>i!==ignore&&faultKey(f.spn,f.fmi)===key)}
+function addFaultObj(f){if(hasDuplicateFault(f.spn,f.fmi)){duplicateWarning=`Fault SPN ${f.spn} FMI ${f.fmi} already exists. Duplicate active DTCs are not added.`}else{faults.push({...f}); duplicateWarning=''} renderFaults(); render();}
+function addFault(){const spn=parseInt(document.getElementById('newSpn').value); const fmi=parseInt(document.getElementById('newFmi').value); if(Number.isNaN(spn)){duplicateWarning='Enter an SPN before adding a manual fault.'; renderFaults(); return} addFaultObj({spn,fmi,crit:document.getElementById('manualCrit').value,lamp:document.getElementById('manualCrit').value==='High'?'Red Stop Lamp':'Amber Warning Lamp',flash:document.getElementById('manualCrit').value==='High'?'Fast Flash':'Slow Flash',label:'Manual fault'});}
+function clearFaults(doRender=true){faults=[]; duplicateWarning=''; if(doRender){renderFaults(); render();}}
+function uniqueFaults(){const seen=new Set(),out=[]; faults.forEach(f=>{const k=faultKey(f.spn,f.fmi); if(!seen.has(k)){seen.add(k); out.push(f)}}); return out;}
+let rotationIndex=0;
+function currentRotationFault(){const u=uniqueFaults(); if(!u.length)return null; return u[rotationIndex % u.length];}
+function previewFault(){const u=uniqueFaults(); if(!u.length)return null; return u[0];}
+function renderFaults(){['faults','simpleActive'].forEach(id=>{const box=document.getElementById(id); if(!box)return; box.innerHTML=''; if(duplicateWarning)box.innerHTML+=`<div class="fault"><strong>Notice:</strong> ${duplicateWarning}</div>`; if(!faults.length){box.innerHTML+='<p class="muted">No active faults added.</p>'; return} const u=uniqueFaults(); faults.forEach((f,i)=>{const order=u.findIndex(x=>faultKey(x.spn,x.fmi)===faultKey(f.spn,f.fmi)); box.innerHTML+=`<div class="fault"><strong>${f.label||'Fault '+(i+1)}</strong> <span class="pill">DM1 rotation #${order+1}</span><br>SPN ${f.prop?'Proprietary ':''}${f.spn}, FMI ${f.fmi} - ${fmiText(f.fmi)}<br>Criticality: ${f.crit||'Medium'} | Lamp: ${f.lamp||'TBD'} | Flash: ${f.flash||'TBD'}<br><span class="muted small">Single-packet rule: this fault is sent as its own DM1 frame when its turn comes in the rotation.</span><br><button class="danger" style="margin-top:10px" onclick="faults.splice(${i},1);duplicateWarning=''; if(rotationIndex>=uniqueFaults().length) rotationIndex=0; renderFaults();render();">Remove this fault</button></div>`})})}
+function lampBytesForFault(f){if(!f)return [0,0]; let lamp=0,flash=0; if(f.lamp==='Amber Warning Lamp')lamp|=1<<2; if(f.lamp==='Red Stop Lamp')lamp|=1<<4; if(f.lamp==='Protect Lamp')lamp|=1; if(f.lamp==='MIL')lamp|=1<<6; if(f.flash==='Slow Flash'){ if(f.lamp==='Amber Warning Lamp')flash|=1<<2; else if(f.lamp==='Red Stop Lamp')flash|=1<<4; else if(f.lamp==='Protect Lamp')flash|=1; else if(f.lamp==='MIL')flash|=1<<6; } if(f.flash==='Fast Flash'){ if(f.lamp==='Amber Warning Lamp')flash|=2<<2; else if(f.lamp==='Red Stop Lamp')flash|=2<<4; else if(f.lamp==='Protect Lamp')flash|=2; else if(f.lamp==='MIL')flash|=2<<6; } return [lamp,flash];}
+function dtcBytes(spn,fmi,oc){spn=Math.max(0,Math.min(0x7FFFF,spn|0)); fmi=fmi&0x1F; oc=Math.max(0,Math.min(126,oc|0)); return [spn&0xFF,(spn>>8)&0xFF,((spn>>16)&7)|(fmi<<3),oc&0x7F]}
+function calc(faultForFrame=null){const sa=parseHexByte(document.getElementById('sa').value), pri=parseInt(document.getElementById('priority').value)||6, oc=parseInt(document.getElementById('oc').value)||1; const canId=((pri&7)<<26)|(0xFECA<<8)|sa; const f=faultForFrame || previewFault(); if(!f){return{sa,pri,oc,canId,payload:[0,0,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF],fault:null,more:false}} const [lamp,flash]=lampBytesForFault(f); const payload=[lamp,flash,...dtcBytes(f.spn,f.fmi,oc),0xFF,0xFF]; return{sa,pri,oc,canId,payload,fault:f,more:uniqueFaults().length>1};}
+function render(){renderSimpleInfo(); const c=calc(); const message=`CAN ID: ${hex(c.canId,8)}\nData:   ${c.payload.map(b=>hex(b)).join(' ')}`; let note=''; if(!c.fault) note='<p><span class="pill warn">No active DTC selected</span></p><p class="muted">Add a fault to see the DM1 CAN message.</p>'; else note=`<p><span class="pill">Single-frame DM1 only</span> ${c.more?'<span class="pill warn">Multiple faults active: trace rotates one DTC per second</span>':''}</p><p><strong>Preview frame:</strong> ${c.fault.label||'Manual fault'} | SPN ${c.fault.spn}, FMI ${c.fault.fmi}</p>`; const summaryHtml=`${note}<pre>${message}</pre>`; document.getElementById('summary').innerHTML=summaryHtml; document.getElementById('summarySimple').innerHTML=summaryHtml; let rows=''; c.payload.forEach((b,i)=>{let contains=i===0?'Lamp status':i===1?'Flash status':i===2?'SPN bits 0-7':i===3?'SPN bits 8-15':i===4?'SPN bits 16-18 + FMI':i===5?'Occurrence count + conversion method':'Unused / not available'; rows+=`<tr><td>Data[${i}]</td><td>${hex(b)}</td><td>${b.toString(2).padStart(8,'0')}</td><td>${contains}</td></tr>`}); document.getElementById('byteTable').innerHTML=`<table><tr><th>Byte</th><th>Hex</th><th>Binary</th><th>Contains</th></tr>${rows}</table>`; let m=[`CAN ID = (priority << 26) | (0xFECA << 8) | SA`,`       = (${c.pri} << 26) | 0x00FECA00 | 0x${hex(c.sa)}`,`       = 0x${hex(c.canId,8)}`,'',`Data[0] lamp byte = 0x${hex(c.payload[0])}`,`Data[1] flash byte = 0x${hex(c.payload[1])}`]; if(c.fault){const bytes=dtcBytes(c.fault.spn,c.fault.fmi,c.oc); m.push('',`DTC preview: ${c.fault.label||''}`,`SPN ${c.fault.spn} = 0x${hex(c.fault.spn, c.fault.spn>255?3:2)}`,`FMI ${c.fault.fmi} = ${fmiText(c.fault.fmi)}`,`OC = ${c.oc}`,`DTC bytes = ${bytes.map(b=>hex(b)).join(' ')}`); if(c.more)m.push('',`Multiple active faults exist. BAM/multi-packet DM1 is disabled for this customer, so the live trace rotates through the active DTC list and sends one single-packet DM1 frame each second.`)} document.getElementById('manual').textContent=m.join('\n');}
+function frame(){const f=currentRotationFault(); const c=calc(f); return [hex(c.canId,8),c.payload,f];}
 function traceBoxes(){return [document.getElementById('trace'),document.getElementById('traceDev')].filter(Boolean)}
-function appendTrace(){const t=((Date.now()-simStart)/1000).toFixed(3).padStart(8,' ');const lines=[];frames().forEach(([id,data],idx)=>{const time=(parseFloat(t)+idx*0.050).toFixed(3).padStart(8,' ');lines.push(`${time}   ${id}   8   ${data.map(b=>hex(b)).join(' ')}`)});traceBoxes().forEach(b=>{b.textContent+=lines.join('\n')+'\n';b.scrollTop=b.scrollHeight})}
-function startSim(){if(simTimer)return;simStart=Date.now();appendTrace();simTimer=setInterval(appendTrace,Math.max(100,parseInt(document.getElementById('rate').value)||1000))} function stopSim(){clearInterval(simTimer);simTimer=null} function clearTrace(){traceBoxes().forEach(b=>b.textContent='Time       CAN ID     DLC Data\n')}
-clearTrace();init();
+function appendTrace(){const u=uniqueFaults(); if(!u.length){const t=((Date.now()-simStart)/1000).toFixed(3).padStart(8,' '); const line=`${t}   --         0   No active fault selected`; traceBoxes().forEach(b=>{b.textContent+=line+'\n'; b.scrollTop=b.scrollHeight}); return;} const t=((Date.now()-simStart)/1000).toFixed(3).padStart(8,' '); const [id,data,f]=frame(); const label=(f&&f.label)?`   ; ${f.label}`:''; const line=`${t}   ${id}   8   ${data.map(b=>hex(b)).join(' ')}${label}`; traceBoxes().forEach(b=>{b.textContent+=line+'\n'; b.scrollTop=b.scrollHeight}); rotationIndex=(rotationIndex+1)%uniqueFaults().length; render();}
+function startSim(){if(simTimer)return; simStart=Date.now(); appendTrace(); simTimer=setInterval(appendTrace,1000)}
+function stopSim(){clearInterval(simTimer); simTimer=null}
+function clearTrace(){traceBoxes().forEach(b=>b.textContent='Time       CAN ID     DLC Data\n')}
+init();
 </script>
 </body>
 </html>
