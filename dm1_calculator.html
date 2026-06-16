@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MAX-SAFE DM1 Calculator and Trace Simulator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=KoHo:wght@400;500;600;700&display=swap');
+  :root {
+    --red:#CA202D;
+    --gray:#404042;
+    --light-gray:#F5F6F6;
+    --black:#000000;
+    --white:#ffffff;
+    --panel:#ffffff;
+    --text:#000000;
+    --muted:#404042;
+    --border:#d9d9d9;
+    --soft:#f5f6f6;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body {
+    margin:0;
+    font-family:'KoHo', Arial, sans-serif;
+    background:var(--light-gray);
+    color:var(--text);
+    line-height:1.45;
+  }
+  header {
+    padding:22px 16px;
+    background:var(--black);
+    color:var(--white);
+    border-bottom:6px solid var(--red);
+  }
+  .brand { max-width:1200px; margin:auto; }
+  h1 { margin:0 0 6px; font-size:clamp(24px, 6vw, 38px); font-weight:700; letter-spacing:.2px; }
+  h2 { margin:0 0 14px; color:var(--black); font-size:clamp(20px, 5vw, 28px); }
+  h3 { margin:18px 0 8px; color:var(--gray); font-size:18px; }
+  main { padding:16px; display:grid; gap:16px; max-width:1200px; margin:auto; }
+  section { background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:16px; box-shadow:0 2px 10px rgba(0,0,0,.05); }
+  .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap:12px; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
+  label { display:block; font-weight:700; margin-bottom:5px; color:var(--black); }
+  input, select, button {
+    border-radius:10px;
+    border:1px solid var(--border);
+    padding:12px;
+    background:var(--white);
+    color:var(--black);
+    font-family:'KoHo', Arial, sans-serif;
+    font-size:16px;
+  }
+  input, select { width:100%; min-height:46px; }
+  button {
+    cursor:pointer;
+    background:var(--red);
+    border-color:var(--red);
+    color:var(--white);
+    font-weight:700;
+    min-height:46px;
+    touch-action:manipulation;
+  }
+  button.secondary { background:var(--gray); border-color:var(--gray); color:var(--white); }
+  button.danger { background:var(--black); border-color:var(--black); color:var(--white); }
+  button:disabled { opacity:.55; cursor:not-allowed; }
+  table { width:100%; border-collapse:collapse; margin:10px 0; }
+  th, td { border:1px solid var(--border); padding:8px; text-align:left; vertical-align:top; }
+  th { background:var(--gray); color:var(--white); }
+  tr:nth-child(even) td { background:#fafafa; }
+  code, pre { background:var(--black); color:var(--light-gray); border-radius:10px; }
+  code { padding:2px 6px; }
+  pre { padding:12px; overflow:auto; min-height:50px; font-size:14px; }
+  .muted { color:#cfd0d2; }
+  main .muted { color:var(--muted); }
+  .pill { display:inline-block; border-radius:999px; padding:3px 9px; background:var(--red); color:var(--white); font-size:12px; font-weight:700; }
+  .fault { background:var(--soft); border:1px solid var(--border); border-left:6px solid var(--red); border-radius:12px; padding:12px; margin:10px 0; }
+  .trace { height:420px; overflow:auto; font-family:Consolas, 'Courier New', monospace; white-space:pre; background:var(--black); color:var(--light-gray); border:1px solid var(--gray); border-radius:10px; padding:12px; font-size:13px; }
+  .good { color:#1a7f37; } .warn { color:#a16207; } .bad { color:var(--red); }
+  .small { font-size:13px; }
+  .table-wrap { width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  @media (max-width: 720px) {
+    header { padding:18px 12px; }
+    main { padding:12px; gap:12px; }
+    section { padding:12px; border-radius:12px; }
+    .grid { grid-template-columns:1fr; }
+    .row { display:grid; grid-template-columns:1fr; }
+    button { width:100%; }
+    table { display:block; overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch; }
+    th, td { padding:7px; font-size:13px; }
+    pre { font-size:12px; }
+    .trace { height:320px; font-size:12px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><h1>MAX-SAFE DM1 Calculator</h1>
+  <div class="muted">Build J1939 DM1 messages manually, encode SPN/FMI/OC, and simulate single or multi-fault CAN traces live.</div></div>
+</header>
+<main>
+<section>
+  <h2>1. Manual Method: How DM1 is Built</h2>
+  <div class="grid">
+    <div>
+      <h3>CAN ID layout</h3>
+      <table>
+        <tr><th>Bits</th><th>Field</th><th>DM1 example</th></tr>
+        <tr><td>28-26</td><td>Priority</td><td>Usually 6 -> <code>0x18xxxxxx</code></td></tr>
+        <tr><td>25</td><td>Reserved</td><td>0</td></tr>
+        <tr><td>24</td><td>Data Page</td><td>0</td></tr>
+        <tr><td>23-16</td><td>PDU Format</td><td><code>FE</code></td></tr>
+        <tr><td>15-8</td><td>PDU Specific</td><td><code>CA</code></td></tr>
+        <tr><td>7-0</td><td>Source Address</td><td>Example <code>E7</code></td></tr>
+      </table>
+      <pre>Priority 6 + PGN FECA + SA E7 = 18FECAE7</pre>
+    </div>
+    <div>
+      <h3>DM1 data bytes</h3>
+      <table>
+        <tr><th>Byte</th><th>Contains</th></tr>
+        <tr><td>Data[0]</td><td>Lamp status, four 2-bit fields</td></tr>
+        <tr><td>Data[1]</td><td>Flash status, four 2-bit fields</td></tr>
+        <tr><td>Data[2]</td><td>SPN bits 0-7</td></tr>
+        <tr><td>Data[3]</td><td>SPN bits 8-15</td></tr>
+        <tr><td>Data[4]</td><td>SPN bits 16-18 in bits 0-2, FMI in bits 3-7</td></tr>
+        <tr><td>Data[5]</td><td>OC in bits 0-6, CM in bit 7</td></tr>
+        <tr><td>Data[6-7]</td><td>Unused for one DTC, usually FF FF</td></tr>
+      </table>
+    </div>
+  </div>
+  <h3>Bit numbering reminder</h3>
+  <pre>bit:    7   6   5   4   3   2   1   0
+value: 128 64  32  16  8   4   2   1</pre>
+  <h3>Lamp and flash fields</h3>
+  <table>
+    <tr><th>Byte</th><th>Bits</th><th>Lamp</th><th>Use guideline</th></tr>
+    <tr><td>Data[0]</td><td>0-1</td><td>Protect Lamp</td><td>Protection/limiting mode active.</td></tr>
+    <tr><td>Data[0]</td><td>2-3</td><td>Amber Warning Lamp</td><td>Warning or service fault. Degraded but not immediate stop.</td></tr>
+    <tr><td>Data[0]</td><td>4-5</td><td>Red Stop Lamp</td><td>Critical fault. System/vehicle should stop or not operate.</td></tr>
+    <tr><td>Data[0]</td><td>6-7</td><td>Malfunction Indicator Lamp</td><td>Usually emissions/regulatory. Often not used by MSARB.</td></tr>
+    <tr><td>Data[1]</td><td>0-1</td><td>Protect Lamp flash</td><td>Flash pattern for Protect Lamp.</td></tr>
+    <tr><td>Data[1]</td><td>2-3</td><td>Amber Warning Lamp flash</td><td>Flash pattern for Amber Lamp.</td></tr>
+    <tr><td>Data[1]</td><td>4-5</td><td>Red Stop Lamp flash</td><td>Flash pattern for Red Lamp.</td></tr>
+    <tr><td>Data[1]</td><td>6-7</td><td>MIL flash</td><td>Flash pattern for MIL.</td></tr>
+  </table>
+  <table>
+    <tr><th>2-bit value</th><th>Lamp status meaning</th><th>Flash status meaning</th></tr>
+    <tr><td>00</td><td>Off</td><td>No flash</td></tr>
+    <tr><td>01</td><td>On</td><td>Slow flash</td></tr>
+    <tr><td>10</td><td>Reserved</td><td>Fast flash</td></tr>
+    <tr><td>11</td><td>Not available</td><td>Not available</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>2. Inputs</h2>
+  <div class="grid">
+    <div>
+      <label>Source Address, hex</label>
+      <input id="sa" value="E7" maxlength="2" />
+    </div>
+    <div>
+      <label>Priority</label>
+      <select id="priority">
+        <option value="0">0 - highest / safety critical</option>
+        <option value="1">1 - very high</option>
+        <option value="2">2 - high</option>
+        <option value="3">3 - control/high priority</option>
+        <option value="4">4 - medium-high</option>
+        <option value="5">5 - medium</option>
+        <option value="6" selected>6 - common J1939 status/diagnostic default</option>
+        <option value="7">7 - lowest priority</option>
+      </select>
+    </div>
+    <div>
+      <label>Occurrence Count</label>
+      <input id="oc" type="number" min="0" max="126" value="1" />
+    </div>
+    <div>
+      <label>DM1 repetition rate, ms</label>
+      <input id="rate" type="number" min="100" value="1000" />
+    </div>
+  </div>
+  <h3>Lamp status</h3>
+  <div class="grid">
+    <div><label>Protect Lamp</label><select id="lampProtect"></select></div>
+    <div><label>Amber Warning Lamp</label><select id="lampAmber"></select></div>
+    <div><label>Red Stop Lamp</label><select id="lampRed"></select></div>
+    <div><label>MIL</label><select id="lampMil"></select></div>
+  </div>
+  <h3>Flash pattern</h3>
+  <div class="grid">
+    <div><label>Protect Flash</label><select id="flashProtect"></select></div>
+    <div><label>Amber Flash</label><select id="flashAmber"></select></div>
+    <div><label>Red Flash</label><select id="flashRed"></select></div>
+    <div><label>MIL Flash</label><select id="flashMil"></select></div>
+  </div>
+</section>
+
+<section>
+  <h2>3. Faults</h2>
+  <div class="row">
+    <button onclick="addFault()">Add fault</button>
+    <button class="secondary" onclick="loadExample()">Load two-fault example</button>
+    <button class="danger" onclick="clearFaults()">Clear faults</button>
+  </div>
+  <div id="faults"></div>
+</section>
+
+<section>
+  <h2>4. Calculated CAN Message</h2>
+  <div id="summary"></div>
+  <h3>Byte table</h3>
+  <div id="byteTable"></div>
+  <h3>Manual calculation details</h3>
+  <pre id="manual"></pre>
+</section>
+
+<section>
+  <h2>5. Live Trace Simulator</h2>
+  <div class="row">
+    <button id="startBtn" onclick="startSim()">Start</button>
+    <button class="secondary" onclick="stopSim()">Stop</button>
+    <button class="danger" onclick="clearTrace()">Clear trace</button>
+  </div>
+  <p class="muted small">If one DTC fits in 8 bytes, the simulator sends a single DM1 frame. If multiple DTCs exceed 8 bytes, it sends BAM + TP.DT packets.</p>
+  <div class="trace" id="trace"></div>
+</section>
+</main>
+<script>
+const fmiOptions = [
+  [0,'Data valid but above normal operational range - most severe'],
+  [1,'Data valid but below normal operational range - most severe'],
+  [2,'Data erratic, intermittent, or incorrect'],
+  [3,'Voltage above normal or shorted high'],
+  [4,'Voltage below normal or shorted low'],
+  [5,'Current below normal or open circuit'],
+  [6,'Current above normal or grounded circuit'],
+  [7,'Mechanical system not responding properly'],
+  [8,'Abnormal frequency, pulse width, or period'],
+  [9,'Abnormal update rate'],
+  [10,'Abnormal rate of change'],
+  [11,'Root cause not known'],
+  [12,'Bad intelligent device or component'],
+  [13,'Out of calibration'],
+  [14,'Special instructions'],
+  [15,'Data valid but above normal operational range - least severe'],
+  [16,'Data valid but above normal operational range - moderately severe'],
+  [17,'Data valid but below normal operational range - least severe'],
+  [18,'Data valid but below normal operational range - moderately severe'],
+  [19,'Received network data in error'],
+  [31,'Condition exists']
+];
+const lampStatusOptions = [[0,'0 - Off'],[1,'1 - On'],[2,'2 - Reserved'],[3,'3 - Not available']];
+const flashOptions = [[0,'0 - No flash'],[1,'1 - Slow flash'],[2,'2 - Fast flash'],[3,'3 - Not available']];
+let faults = [];
+let simTimer = null;
+let simStart = null;
+function hex(n, width=2){ return (n>>>0).toString(16).toUpperCase().padStart(width,'0'); }
+function parseHexByte(s){ let n=parseInt(String(s).trim(),16); if(Number.isNaN(n)||n<0||n>255) return 0; return n; }
+function fillSelect(id, options, selected=0){ const el=document.getElementById(id); el.innerHTML=''; options.forEach(([v,t])=>{ const o=document.createElement('option'); o.value=v; o.textContent=t; if(v===selected)o.selected=true; el.appendChild(o);}); }
+function init(){
+  ['lampProtect','lampAmber','lampRed','lampMil'].forEach(id=>fillSelect(id,lampStatusOptions, id==='lampAmber'?1:0));
+  ['flashProtect','flashAmber','flashRed','flashMil'].forEach(id=>fillSelect(id,flashOptions, id==='flashAmber'?1:0));
+  loadExample();
+  document.querySelectorAll('input,select').forEach(el=>el.addEventListener('input', render));
+}
+function addFault(spn=168, fmi=4){ faults.push({spn, fmi}); renderFaults(); render(); }
+function clearFaults(){ faults=[]; renderFaults(); render(); }
+function loadExample(){ faults=[{spn:168,fmi:4},{spn:1856,fmi:5}]; renderFaults(); render(); }
+function renderFaults(){
+  const box=document.getElementById('faults'); box.innerHTML='';
+  faults.forEach((f,i)=>{
+    const div=document.createElement('div'); div.className='fault';
+    div.innerHTML=`<div class="grid"><div><label>Fault ${i+1} SPN</label><input type="number" min="0" max="524287" value="${f.spn}" oninput="faults[${i}].spn=parseInt(this.value||0); render();" /></div><div><label>FMI</label><select onchange="faults[${i}].fmi=parseInt(this.value); render();">${fmiOptions.map(([v,t])=>`<option value="${v}" ${v===f.fmi?'selected':''}>${v} - ${t}</option>`).join('')}</select></div></div><button class="danger" style="margin-top:10px" onclick="faults.splice(${i},1); renderFaults(); render();">Remove</button>`;
+    box.appendChild(div);
+  });
+}
+function getLampByte(prefix){
+  const p=parseInt(document.getElementById(prefix+'Protect').value);
+  const a=parseInt(document.getElementById(prefix+'Amber').value);
+  const r=parseInt(document.getElementById(prefix+'Red').value);
+  const m=parseInt(document.getElementById(prefix+'Mil').value);
+  return (p) | (a<<2) | (r<<4) | (m<<6);
+}
+function dtcBytes(spn,fmi,oc){
+  spn = Math.max(0, Math.min(0x7FFFF, spn|0));
+  fmi = fmi & 0x1F;
+  oc = Math.max(0, Math.min(126, oc|0));
+  const b0 = spn & 0xFF;
+  const b1 = (spn >> 8) & 0xFF;
+  const b2 = ((spn >> 16) & 0x07) | (fmi << 3);
+  const b3 = oc & 0x7F; // CM=0
+  return [b0,b1,b2,b3];
+}
+function calc(){
+  const sa=parseHexByte(document.getElementById('sa').value);
+  const pri=parseInt(document.getElementById('priority').value);
+  const oc=parseInt(document.getElementById('oc').value)||0;
+  const canId = ((pri&7)<<26) | (0xFECA<<8) | sa;
+  const lamp=getLampByte('lamp');
+  const flash=getLampByte('flash');
+  let payload=[lamp, flash];
+  faults.forEach(f=>payload.push(...dtcBytes(parseInt(f.spn)||0, parseInt(f.fmi)||0, oc)));
+  if(faults.length===0) payload=[lamp,flash,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF];
+  return {sa,pri,oc,canId,payload};
+}
+function render(){
+  const c=calc();
+  const single = c.payload.length<=8;
+  const data = single ? c.payload.concat(Array(8-c.payload.length).fill(0xFF)) : c.payload;
+  document.getElementById('summary').innerHTML = `<p><span class="pill">${single?'Single-frame DM1':'Multi-packet DM1 using BAM'}</span></p><pre>CAN ID: ${hex(c.canId,8)}\nPayload: ${data.map(b=>hex(b)).join(' ')}</pre>`;
+  let rows='';
+  const labels=['Lamp status','Flash status'];
+  data.forEach((b,i)=>{ rows += `<tr><td>Data[${i}]</td><td>${hex(b)}</td><td>${hex(b,2).split('').map(()=> '').join('') || ''}${b.toString(2).padStart(8,'0')}</td><td>${i<2?labels[i]:(i>=2?'DTC payload byte':'')}</td></tr>`; });
+  document.getElementById('byteTable').innerHTML=`<table><tr><th>Byte</th><th>Hex</th><th>Binary</th><th>Contains</th></tr>${rows}</table>`;
+  let m=[];
+  m.push(`CAN ID = (priority << 26) | (0xFECA << 8) | SA`);
+  m.push(`       = (${c.pri} << 26) | 0x00FECA00 | 0x${hex(c.sa)}`);
+  m.push(`       = 0x${hex(c.canId,8)}`);
+  m.push('');
+  m.push(`Data[0] lamp byte = 0x${hex(c.payload[0]||0)}`);
+  m.push(`Data[1] flash byte = 0x${hex(c.payload[1]||0)}`);
+  faults.forEach((f,i)=>{
+    const bytes=dtcBytes(parseInt(f.spn)||0,parseInt(f.fmi)||0,c.oc);
+    m.push('');
+    m.push(`DTC ${i+1}: SPN ${f.spn}, FMI ${f.fmi}, OC ${c.oc}`);
+    m.push(`SPN hex = 0x${hex(parseInt(f.spn)||0,5)}`);
+    m.push(`DTC bytes = ${bytes.map(b=>hex(b)).join(' ')}`);
+    m.push(`Data byte meaning: SPN low, SPN mid, SPN upper bits + (FMI << 3), OC`);
+  });
+  if(!single){
+    const packets=Math.ceil(c.payload.length/7);
+    m.push(''); m.push(`Payload length ${c.payload.length} bytes > 8, so use BAM.`);
+    m.push(`BAM total packets = ceil(${c.payload.length}/7) = ${packets}`);
+  }
+  document.getElementById('manual').textContent=m.join('\n');
+}
+function frames(){
+  const c=calc();
+  if(c.payload.length<=8){
+    const data=c.payload.concat(Array(8-c.payload.length).fill(0xFF));
+    return [[hex(c.canId,8), data]];
+  }
+  const priPrefix=(c.pri&7)<<26;
+  const cmId=priPrefix | (0xEC00<<8) | (0xFF<<8) | c.sa; // PF EC, PS FF, SA
+  const dtId=priPrefix | (0xEB00<<8) | (0xFF<<8) | c.sa;
+  const len=c.payload.length;
+  const packets=Math.ceil(len/7);
+  const out=[];
+  out.push([hex(cmId,8), [0x20, len&0xFF, (len>>8)&0xFF, packets, 0xFF, 0xCA, 0xFE, 0x00]]);
+  for(let i=0;i<packets;i++){
+    const chunk=c.payload.slice(i*7,i*7+7);
+    while(chunk.length<7) chunk.push(0xFF);
+    out.push([hex(dtId,8), [i+1,...chunk]]);
+  }
+  return out;
+}
+function appendTrace(){
+  const t=((Date.now()-simStart)/1000).toFixed(3).padStart(8,' ');
+  const box=document.getElementById('trace');
+  frames().forEach(([id,data],idx)=>{
+    const time=(parseFloat(t)+idx*0.050).toFixed(3).padStart(8,' ');
+    box.textContent += `${time}   ${id}   8   ${data.map(b=>hex(b)).join(' ')}\n`;
+  });
+  box.scrollTop=box.scrollHeight;
+}
+function startSim(){ if(simTimer) return; simStart=Date.now(); appendTrace(); simTimer=setInterval(appendTrace, Math.max(100, parseInt(document.getElementById('rate').value)||1000)); }
+function stopSim(){ clearInterval(simTimer); simTimer=null; }
+function clearTrace(){ document.getElementById('trace').textContent='Time       CAN ID     DLC Data\n'; }
+clearTrace(); init();
+</script>
+</body>
+</html>
