@@ -66,12 +66,11 @@
   <h2>Simple MAX-SAFE Fault Selector</h2>
   <div class="simple-card">
     <h3>How to use this</h3>
-    <p>Use this like a simple fault translator. First choose <strong>what failed</strong>, then choose <strong>how it failed</strong>. The tool shows the exact CAN message MAX-SAFE would transmit.</p>
+    <p>Use this like a simple fault translator. Choose a <strong>fault</strong> from the list, then click <strong>Add selected fault</strong>. The tool adds it to the active fault stack and creates the DM1 message accordingly.</p>
     <p class="muted small"><strong>SPN</strong> means the faulty component or signal. <strong>FMI</strong> means how it failed. For this customer, the trace uses <strong>single-packet DM1 only</strong>. If several faults are active, the live trace rotates through them one-by-one, one fault every second. When no faults are active, MAX-SAFE sends the no-fault DM1 frame.</p>
   </div>
   <div class="grid" style="margin-top:14px">
-    <div><label>What failed?</label><select id="simpleComponent" onchange="populateSymptoms()"></select></div>
-    <div><label>How did it fail?</label><select id="simpleSymptom" onchange="renderSimpleInfo()"></select></div>
+    <div><label>Fault</label><select id="simpleFault" onchange="renderSimpleInfo(); render();"></select></div>
   </div>
   <div class="row" style="margin-top:12px">
     <button onclick="addSimpleFault()">Add selected fault</button>
@@ -122,8 +121,7 @@
   </div>
   <h3>Fault quick add</h3>
   <div class="grid">
-    <div><label>What failed?</label><select id="devComponent" onchange="populateDevSymptoms()"></select></div>
-    <div><label>How it failed?</label><select id="devSymptom"></select></div>
+    <div><label>Fault</label><select id="devFault"></select></div>
   </div>
   <div class="row" style="margin-top:12px"><button onclick="addDevMappedFault()">Add mapped fault</button></div>
   <h3>Manual fault add</h3>
@@ -148,20 +146,31 @@
 </main>
 <script>
 const fmiOptions=[[0,'Data valid but above normal operational range - most severe'],[1,'Data valid but below normal operational range - most severe'],[2,'Data erratic, intermittent, or incorrect'],[3,'Voltage above normal or shorted high'],[4,'Voltage below normal or shorted low'],[5,'Current below normal or open circuit'],[6,'Current above normal or grounded circuit'],[7,'Mechanical system not responding properly'],[8,'Abnormal frequency, pulse width, or period'],[9,'Abnormal update rate'],[10,'Abnormal rate of change'],[11,'Root cause not known'],[12,'Bad intelligent device or component'],[13,'Out of calibration'],[14,'Special instructions'],[15,'Data valid but above normal operational range - least severe'],[16,'Data valid but above normal operational range - moderately severe'],[17,'Data valid but below normal operational range - least severe'],[18,'Data valid but below normal operational range - moderately severe'],[19,'Received network data in error'],[31,'Condition exists']];
-const faultMap={
- 'Ignition':[{symptom:'Loss of Ignition',spn:158,fmi:4,crit:'Medium',lamp:'Amber Warning Lamp',flash:'Slow Flash'}],
- 'GPS Fault':[{symptom:'Invalid / low quality',spn:520001,fmi:2,prop:true,crit:'Low',lamp:'Amber Warning Lamp',flash:'No Flash'}],
- 'CAN Fault':[{symptom:'Loss of CAN',spn:520002,fmi:9,prop:true,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'}],
- 'Speed Fault':[{symptom:'Invalid',spn:84,fmi:9,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'}],
- 'Seat Fault':[{symptom:'Open Circuit',spn:1504,fmi:4,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'},{symptom:'Short Circuit',spn:1504,fmi:3,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'}],
- 'Door Fault':[{symptom:'Loss / Voltage High',spn:1821,fmi:3,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'},{symptom:'Voltage below normal',spn:1821,fmi:4,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'}],
- 'Reset Switch':[{symptom:'Open Circuit',spn:70,fmi:5,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'},{symptom:'Short Circuit',spn:70,fmi:3,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'}],
- 'Buckle Fault':[{symptom:'Open Circuit',spn:1856,fmi:5,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'}],
- 'Horn Fault':[{symptom:'Open Circuit / Low Voltage',spn:520003,fmi:5,prop:true,crit:'Medium',lamp:'Amber Warning Lamp',flash:'Slow Flash'},{symptom:'Overcurrent',spn:520003,fmi:6,prop:true,crit:'Medium',lamp:'Amber Warning Lamp',flash:'Slow Flash'}],
- 'AUX':[{symptom:'Overcurrent',spn:2386,fmi:6,crit:'Low',lamp:'Amber Warning Lamp',flash:'No Flash'}],
- 'Valve':[{symptom:'Open Circuit',spn:619,fmi:5,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'},{symptom:'Short to Positive',spn:619,fmi:3,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'},{symptom:'Short to Negative',spn:619,fmi:4,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'},{symptom:'Undercurrent',spn:619,fmi:5,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'},{symptom:'Overcurrent',spn:619,fmi:6,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'},{symptom:'MAX current',spn:619,fmi:6,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'}],
- 'System Voltage':[{symptom:'Low Voltage',spn:168,fmi:4,crit:'High',lamp:'Red Stop Lamp',flash:'Fast Flash'}]
-};
+const faultList=[
+ {no:1, fault:'Low supply volt', spn:168, fmi:4, crit:'High', lamp:'Red Stop Lamp', flash:'Fast Flash'},
+ {no:2, fault:'No vehicle CAN activity on MSB', spn:639, fmi:9, crit:'High', lamp:'Red Stop Lamp', flash:'Fast Flash'},
+ {no:3, fault:'Valve open circuit', spn:520000, fmi:5, prop:true, crit:'High', lamp:'Red Stop Lamp', flash:'Fast Flash'},
+ {no:4, fault:'Valve short to ground', spn:520000, fmi:4, prop:true, crit:'High', lamp:'Red Stop Lamp', flash:'Fast Flash'},
+ {no:5, fault:'Valve short to positive, or no display detected', spn:520000, fmi:3, prop:true, crit:'High', lamp:'Red Stop Lamp', flash:'Fast Flash'},
+ {no:6, fault:'Valve under current', spn:520000, fmi:5, prop:true, crit:'High', lamp:'Red Stop Lamp', flash:'Fast Flash'},
+ {no:7, fault:'Valve over current, or actuator position error', spn:520000, fmi:6, prop:true, crit:'High', lamp:'Red Stop Lamp', flash:'Fast Flash'},
+ {no:8, fault:'Valve over max current', spn:520000, fmi:6, prop:true, crit:'High', lamp:'Red Stop Lamp', flash:'Fast Flash'},
+ {no:9, fault:'Open circuit seat sensor circuit', spn:520001, fmi:4, prop:true, crit:'High', lamp:'Red Stop Lamp', flash:'Fast Flash'},
+ {no:10, fault:'Short circuit seat sensor circuit', spn:520001, fmi:3, prop:true, crit:'High', lamp:'Red Stop Lamp', flash:'Fast Flash'},
+ {no:11, fault:'Seat input always active', spn:520001, fmi:2, prop:true, crit:'High', lamp:'Red Stop Lamp', flash:'Fast Flash'},
+ {no:12, fault:'Dual seats both active', spn:520001, fmi:15, prop:true, crit:'High', lamp:'Red Stop Lamp', flash:'Fast Flash'},
+ {no:13, fault:'No driver detected on seat vehicle moving', spn:520001, fmi:1, prop:true, crit:'High', lamp:'Red Stop Lamp', flash:'Fast Flash'},
+ {no:14, fault:'Door input not detected', spn:1821, fmi:2, crit:'High', lamp:'Red Stop Lamp', flash:'Fast Flash'},
+ {no:15, fault:'Door open vehicle moving', spn:1821, fmi:1, crit:'High', lamp:'Red Stop Lamp', flash:'Fast Flash'},
+ {no:16, fault:'Buckle open circuit', spn:1856, fmi:5, crit:'High', lamp:'Red Stop Lamp', flash:'Fast Flash'},
+ {no:17, fault:'Aux out overcurrent', spn:520002, fmi:6, prop:true, crit:'Low', lamp:'Amber Warning Lamp', flash:'No Flash'},
+ {no:18, fault:'Horn open circuit', spn:520003, fmi:3, prop:true, crit:'Medium', lamp:'Amber Warning Lamp', flash:'Slow Flash'},
+ {no:19, fault:'Horn over current', spn:520003, fmi:6, prop:true, crit:'Medium', lamp:'Amber Warning Lamp', flash:'Slow Flash'},
+ {no:20, fault:'No GPS signal lock', spn:520004, fmi:2, prop:true, crit:'Low', lamp:'Amber Warning Lamp', flash:'No Flash'},
+ {no:21, fault:'Speed signal fault', spn:84, fmi:9, crit:'High', lamp:'Red Stop Lamp', flash:'Fast Flash'},
+ {no:22, fault:'No ignition detected', spn:158, fmi:4, crit:'Medium', lamp:'Amber Warning Lamp', flash:'Slow Flash'},
+ {no:23, fault:'PB applied vehicle moving', spn:520005, fmi:2, prop:true, crit:'High', lamp:'Red Stop Lamp', flash:'Fast Flash'}
+];
 const critRank={High:3,Medium:2,Low:1};
 let faults=[]; let simTimer=null; let simStart=null; let duplicateWarning=''; let traceLog=[];
 function hex(n,w=2){return (n>>>0).toString(16).toUpperCase().padStart(w,'0')}
@@ -169,21 +178,27 @@ function parseHexByte(s){let n=parseInt(String(s||'').trim(),16);return Number.i
 function fmiText(v){return (fmiOptions.find(x=>x[0]===v)||['','Unknown FMI'])[1]}
 function fillSelect(id,options,selected=''){const el=document.getElementById(id); if(!el)return; el.innerHTML=''; options.forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;if(String(v)===String(selected))o.selected=true;el.appendChild(o)})}
 function showView(e,id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));e.target.classList.add('active')}
-function init(){fillSelect('newFmi',fmiOptions,'4'); populateComponents('simpleComponent'); populateComponents('devComponent'); populateSymptoms(); populateDevSymptoms(); document.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',render)); clearTrace(); clearFaults();}
-function populateComponents(id){const el=document.getElementById(id); if(!el)return; el.innerHTML='<option value="">Select...</option>'; Object.keys(faultMap).forEach(k=>{let o=document.createElement('option');o.value=k;o.textContent=k;el.appendChild(o)})}
-function populateSymptoms(){const c=document.getElementById('simpleComponent').value; const s=document.getElementById('simpleSymptom'); s.innerHTML='<option value="">Select...</option>'; if(c){faultMap[c].forEach((f,i)=>{let o=document.createElement('option');o.value=i;o.textContent=f.symptom;s.appendChild(o)})} renderSimpleInfo(); render();}
-function populateDevSymptoms(){const c=document.getElementById('devComponent').value; const s=document.getElementById('devSymptom'); s.innerHTML='<option value="">Select...</option>'; if(c){faultMap[c].forEach((f,i)=>{let o=document.createElement('option');o.value=i;o.textContent=`${f.symptom} - SPN ${f.prop?'Proprietary '+f.spn:f.spn}, FMI ${f.fmi}`;s.appendChild(o)})}}
-function selectedSimpleFault(){const c=document.getElementById('simpleComponent').value; const idx=document.getElementById('simpleSymptom').value; if(!c||idx==='')return null; return {...faultMap[c][parseInt(idx)],component:c,label:c+' - '+faultMap[c][parseInt(idx)].symptom};}
-function selectedDevFault(){const c=document.getElementById('devComponent').value; const idx=document.getElementById('devSymptom').value; if(!c||idx==='')return null; return {...faultMap[c][parseInt(idx)],component:c,label:c+' - '+faultMap[c][parseInt(idx)].symptom};}
-function renderSimpleInfo(){const f=selectedSimpleFault(); const box=document.getElementById('simpleInfo'); if(!f){box.innerHTML='<strong>No fault selected.</strong><br><span class="muted">Start by selecting what failed and how it failed.</span>';return} box.innerHTML=`<strong>${f.label}</strong><br>SPN: ${f.prop?'Proprietary placeholder ':''}${f.spn} ${!f.prop?'[0x'+hex(f.spn, f.spn>255?3:2)+']':''}<br>FMI: ${f.fmi} - ${fmiText(f.fmi)}<br>Criticality: <strong>${f.crit}</strong><br>Lamp status: <strong>${f.lamp}</strong><br>Lamp flash: <strong>${f.flash}</strong>`;}
-function addSimpleFault(){const f=selectedSimpleFault(); if(!f){duplicateWarning='Select what failed and how it failed first.'; renderFaults(); return} addFaultObj(f)}
+function init(){fillSelect('newFmi',fmiOptions,'4'); populateFaultSelect('simpleFault'); populateFaultSelect('devFault'); document.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',render)); clearTrace(); clearFaults();}
+function faultOptionText(f){return `${String(f.no).padStart(2,'0')}. ${f.fault} - SPN ${f.prop?'Proprietary '+f.spn:f.spn} [0x${hex(f.spn, f.spn>255?5:2)}], FMI ${f.fmi}`}
+function populateFaultSelect(id){const el=document.getElementById(id); if(!el)return; el.innerHTML='<option value="">Select fault...</option>'; faultList.forEach((f,i)=>{let o=document.createElement('option');o.value=i;o.textContent=faultOptionText(f);el.appendChild(o)})}
+function selectedFaultFrom(id){const el=document.getElementById(id); if(!el||el.value==='')return null; const src=faultList[parseInt(el.value)]; return {...src,label:`${String(src.no).padStart(2,'0')}. ${src.fault}`};}
+function selectedSimpleFault(){return selectedFaultFrom('simpleFault')}
+function selectedDevFault(){return selectedFaultFrom('devFault')}
+function renderSimpleInfo(){const f=selectedSimpleFault(); const box=document.getElementById('simpleInfo'); if(!f){box.innerHTML='<strong>No fault selected.</strong><br><span class="muted">Start by selecting a fault from the list.</span>';return} box.innerHTML=`<strong>${f.label}</strong><br>SPN: ${f.prop?'Proprietary ':''}${f.spn} [0x${hex(f.spn, f.spn>255?5:2)}]<br>FMI: ${f.fmi} - ${fmiText(f.fmi)}<br>Criticality: <strong>${f.crit}</strong><br>Lamp status: <strong>${f.lamp}</strong><br>Lamp flash: <strong>${f.flash}</strong><br><br><pre>${faultPreviewMessage(f)}</pre>`;}
+function addSimpleFault(){const f=selectedSimpleFault(); if(!f){duplicateWarning='Select a fault first.'; renderFaults(); return} addFaultObj(f)}
 function addDevMappedFault(){const f=selectedDevFault(); if(!f){duplicateWarning='Select a mapped fault first.'; renderFaults(); return} addFaultObj(f)}
-function faultKey(spn,fmi){return `${parseInt(spn)||0}:${parseInt(fmi)||0}`}
-function hasDuplicateFault(spn,fmi,ignore=-1){const key=faultKey(spn,fmi);return faults.some((f,i)=>i!==ignore&&faultKey(f.spn,f.fmi)===key)}
-function addFaultObj(f){if(hasDuplicateFault(f.spn,f.fmi)){duplicateWarning=`Fault SPN ${f.spn} FMI ${f.fmi} already exists. Duplicate active DTCs are not added.`}else{faults.push({...f}); duplicateWarning=''} renderFaults(); render();}
+function faultKey(fOrSpn,fmi){
+  if(typeof fOrSpn==='object' && fOrSpn!==null){
+    if(fOrSpn.no!==undefined)return `list:${fOrSpn.no}`;
+    return `manual:${parseInt(fOrSpn.spn)||0}:${parseInt(fOrSpn.fmi)||0}`;
+  }
+  return `manual:${parseInt(fOrSpn)||0}:${parseInt(fmi)||0}`;
+}
+function hasDuplicateFault(f,ignore=-1){const key=faultKey(f);return faults.some((x,i)=>i!==ignore&&faultKey(x)===key)}
+function addFaultObj(f){if(hasDuplicateFault(f)){duplicateWarning=`${f.label||'Fault SPN '+f.spn+' FMI '+f.fmi} is already active. Duplicate active faults are not added.`}else{faults.push({...f}); duplicateWarning=''} renderFaults(); render();}
 function addFault(){const spn=parseInt(document.getElementById('newSpn').value); const fmi=parseInt(document.getElementById('newFmi').value); if(Number.isNaN(spn)){duplicateWarning='Enter an SPN before adding a manual fault.'; renderFaults(); return} addFaultObj({spn,fmi,crit:document.getElementById('manualCrit').value,lamp:document.getElementById('manualCrit').value==='High'?'Red Stop Lamp':'Amber Warning Lamp',flash:document.getElementById('manualCrit').value==='High'?'Fast Flash':'Slow Flash',label:'Manual fault'});}
 function clearFaults(doRender=true){faults=[]; duplicateWarning=''; rotationIndex=0; if(doRender){renderFaults(); render();}}
-function uniqueFaults(){const seen=new Set(),out=[]; faults.forEach(f=>{const k=faultKey(f.spn,f.fmi); if(!seen.has(k)){seen.add(k); out.push(f)}}); return out;}
+function uniqueFaults(){const seen=new Set(),out=[]; faults.forEach(f=>{const k=faultKey(f); if(!seen.has(k)){seen.add(k); out.push(f)}}); return out;}
 let rotationIndex=0;
 function currentRotationFault(){const u=uniqueFaults(); if(!u.length)return null; return u[rotationIndex % u.length];}
 function previewFault(){const u=uniqueFaults(); if(!u.length)return null; return u[0];}
@@ -195,7 +210,7 @@ function faultPreviewMessage(f){
   return `CAN ID: ${hex(canId,8)}
 Data:   ${payload.map(b=>hex(b)).join(' ')}`;
 }
-function renderFaults(){['faults','simpleActive'].forEach(id=>{const box=document.getElementById(id); if(!box)return; box.innerHTML=''; if(duplicateWarning)box.innerHTML+=`<div class="fault"><strong>Notice:</strong> ${duplicateWarning}</div>`; if(!faults.length){box.innerHTML+='<p class="muted">No active faults added. MAX-SAFE transmits the no-fault DM1 frame:</p><pre>CAN ID: '+hex(calc().canId,8)+'\nData:   00 00 FF FF FF FF FF FF</pre>'; return} const u=uniqueFaults(); faults.forEach((f,i)=>{const order=u.findIndex(x=>faultKey(x.spn,x.fmi)===faultKey(f.spn,f.fmi)); const msg=faultPreviewMessage(f); box.innerHTML+=`<div class="fault"><strong>${f.label||'Fault '+(i+1)}</strong> <span class="pill">DM1 rotation #${order+1}</span><br>SPN ${f.prop?'Proprietary ':''}${f.spn}, FMI ${f.fmi} - ${fmiText(f.fmi)}<br>Criticality: ${f.crit||'Medium'} | Lamp: ${f.lamp||'TBD'} | Flash: ${f.flash||'TBD'}<br><span class="muted small">Single-packet rule: this fault is sent as its own DM1 frame when its turn comes in the rotation.</span><pre>${msg}</pre><button class="danger" style="margin-top:10px" onclick="faults.splice(${i},1);duplicateWarning=''; if(rotationIndex>=uniqueFaults().length) rotationIndex=0; renderFaults();render();">Remove this fault</button></div>`})})}
+function renderFaults(){['faults','simpleActive'].forEach(id=>{const box=document.getElementById(id); if(!box)return; box.innerHTML=''; if(duplicateWarning)box.innerHTML+=`<div class="fault"><strong>Notice:</strong> ${duplicateWarning}</div>`; if(!faults.length){box.innerHTML+='<p class="muted">No active faults added. MAX-SAFE transmits the no-fault DM1 frame:</p><pre>CAN ID: '+hex(calc().canId,8)+'\nData:   00 00 FF FF FF FF FF FF</pre>'; return} const u=uniqueFaults(); faults.forEach((f,i)=>{const order=u.findIndex(x=>faultKey(x)===faultKey(f)); const msg=faultPreviewMessage(f); box.innerHTML+=`<div class="fault"><strong>${f.label||'Fault '+(i+1)}</strong> <span class="pill">DM1 rotation #${order+1}</span><br>SPN ${f.prop?'Proprietary ':''}${f.spn}, FMI ${f.fmi} - ${fmiText(f.fmi)}<br>Criticality: ${f.crit||'Medium'} | Lamp: ${f.lamp||'TBD'} | Flash: ${f.flash||'TBD'}<br><span class="muted small">Single-packet rule: this fault is sent as its own DM1 frame when its turn comes in the rotation.</span><pre>${msg}</pre><button class="danger" style="margin-top:10px" onclick="faults.splice(${i},1);duplicateWarning=''; if(rotationIndex>=uniqueFaults().length) rotationIndex=0; renderFaults();render();">Remove this fault</button></div>`})})}
 function lampBytesForFault(f){if(!f)return [0,0]; let lamp=0,flash=0; if(f.lamp==='Amber Warning Lamp')lamp|=1<<2; if(f.lamp==='Red Stop Lamp')lamp|=1<<4; if(f.lamp==='Protect Lamp')lamp|=1; if(f.lamp==='MIL')lamp|=1<<6; if(f.flash==='Slow Flash'){ if(f.lamp==='Amber Warning Lamp')flash|=1<<2; else if(f.lamp==='Red Stop Lamp')flash|=1<<4; else if(f.lamp==='Protect Lamp')flash|=1; else if(f.lamp==='MIL')flash|=1<<6; } if(f.flash==='Fast Flash'){ if(f.lamp==='Amber Warning Lamp')flash|=2<<2; else if(f.lamp==='Red Stop Lamp')flash|=2<<4; else if(f.lamp==='Protect Lamp')flash|=2; else if(f.lamp==='MIL')flash|=2<<6; } return [lamp,flash];}
 function dtcBytes(spn,fmi,oc){spn=Math.max(0,Math.min(0x7FFFF,spn|0)); fmi=fmi&0x1F; oc=Math.max(0,Math.min(126,oc|0)); return [spn&0xFF,(spn>>8)&0xFF,((spn>>16)&7)|(fmi<<3),oc&0x7F]}
 function calc(faultForFrame=null){const sa=parseHexByte(document.getElementById('sa').value), pri=parseInt(document.getElementById('priority').value)||6, oc=parseInt(document.getElementById('oc').value)||1; const canId=((pri&7)<<26)|(0xFECA<<8)|sa; const f=faultForFrame || previewFault(); if(!f){return{sa,pri,oc,canId,payload:[0,0,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF],fault:null,more:false}} const [lamp,flash]=lampBytesForFault(f); const payload=[lamp,flash,...dtcBytes(f.spn,f.fmi,oc),0xFF,0xFF]; return{sa,pri,oc,canId,payload,fault:f,more:uniqueFaults().length>1};}
