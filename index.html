@@ -309,23 +309,15 @@
 <tr><td>2-N</td><td>Variable, up to 200 characters</td><td>Software Identification, ASCII <strong>*</strong> delimited</td><td>234</td></tr>
 </table>
 <div class="spec-subtitle">MAX-SAFE use in this calculator</div>
-<p class="muted small">Enter the software number, for example <strong>MSB-5.39.89</strong>. The calculator sends one software field, so Byte 1 is always <strong>01h</strong>. The tool adds the final ASCII <strong>*</strong> delimiter automatically.</p>
-<span class="format-example">01 + "MSB-5.39.89*"</span>
+<p class="muted small">Enter the software number, for example <strong>MSB-5.2.0</strong>. The calculator sends one software field, so Byte 1 is always <strong>01h</strong>. The tool adds the final ASCII <strong>*</strong> delimiter automatically.</p>
+<span class="format-example">01 + "MSB-5.2.0*"</span>
 <p class="muted small">PGN 65242 is <strong>on request only</strong>. Use <strong>Common CAN Trace &gt; Customer requests &gt; Software</strong> to append the response once. If the total payload is longer than 8 bytes, the calculator uses J1939 Transport Protocol BAM + TP.DT frames.</p>
 </div>
 </details>
 <div class="grid" style="margin-top:14px">
 <div>
 <label>Software number text</label>
-<input id="softText" placeholder="Example: MSB-5.39.89" value="MSB-5.39.89"/>
-</div>
-<div>
-<label>Source Address SA hex</label>
-<input id="softSa" maxlength="2" value="E7"/>
-</div>
-<div>
-<label>Priority</label>
-<input id="softPriority" max="7" min="0" type="number" value="6"/>
+<input id="softText" placeholder="Example: MSB-5.2.0" value="MSB-5.2.0"/>
 </div>
 </div>
 <p class="muted small">The Software Identification output updates automatically as you type. To send it into the shared CAN log, use <strong>Common CAN Trace &gt; Customer requests &gt; Software</strong>.</p>
@@ -395,14 +387,6 @@
 <div>
 <label>Unit Number <span class="muted small">optional</span></label>
 <input id="serialUnit" placeholder="Optional" value=""/>
-</div>
-<div>
-<label>Source Address SA hex</label>
-<input id="serialSa" maxlength="2" value="E7"/>
-</div>
-<div>
-<label>Priority</label>
-<input id="serialPriority" max="7" min="0" type="number" value="6"/>
 </div>
 </div>
 <p class="muted small">The Component Identification output updates automatically as you type. To send it into the shared CAN log, use <strong>Common CAN Trace &gt; Customer requests &gt; Serial</strong>.</p>
@@ -652,8 +636,8 @@ function init(){
   fillSelect('newFmi',fmiOptions,'4');
   populateFaultSelect('simpleFault');
   populateFaultSelect('devFault');
-  const softSa=document.getElementById('softSa'), softPriority=document.getElementById('softPriority');
-  const serialSa=document.getElementById('serialSa'), serialPriority=document.getElementById('serialPriority');
+  const softSa=null, softPriority=null;
+  const serialSa=null, serialPriority=null;
   const propSas=[];
   const propPriorities=[];
   const sa=document.getElementById('sa'), priority=document.getElementById('priority');
@@ -879,10 +863,10 @@ function clearTrace(){
 }
 function sortedTraceLog(){return traceLog.slice().sort((a,b)=>a.time-b.time)}
 
-function softPriorityValue(){return parseInt(document.getElementById('softPriority')?.value || document.getElementById('priority')?.value || '6')||6}
-function softSaValue(){return parseHexByte(document.getElementById('softSa')?.value || document.getElementById('sa')?.value || 'E7')}
-function serialPriorityValue(){return parseInt(document.getElementById('serialPriority')?.value || document.getElementById('priority')?.value || '6')||6}
-function serialSaValue(){return parseHexByte(document.getElementById('serialSa')?.value || document.getElementById('sa')?.value || 'E7')}
+function softPriorityValue(){return 6}
+function softSaValue(){return 0xE7}
+function serialPriorityValue(){return 6}
+function serialSaValue(){return 0xE7}
 function asciiBytes(text){return Array.from(text).map(ch=>ch.charCodeAt(0)&0xFF)}
 function printableAsciiOnly(text){return Array.from(text).every(ch=>{const c=ch.charCodeAt(0); return c>=32 && c<=126;})}
 function pad8(arr){const out=arr.slice(); while(out.length<8)out.push(0xFF); return out.slice(0,8)}
