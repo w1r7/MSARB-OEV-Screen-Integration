@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>MAX-SAFE CAN Message Calculator</title>
+<title>MAX-SAFE Internal CAN Message Calculator - Internal Use Only</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=KoHo:wght@400;500;600;700&display=swap');
   :root{
@@ -52,6 +52,13 @@
   details.help[open]{background:#fff}
   details.help + details.help{margin-top:10px}
 
+  .spec-card{border:1px solid var(--border);border-radius:14px;background:#fff;padding:12px;margin:12px 0}
+  .spec-title{font-size:18px;font-weight:700;color:var(--max-black);margin-bottom:8px}
+  .spec-subtitle{font-weight:600;color:var(--max-gray);margin:10px 0 4px}
+  .spec-table th{white-space:nowrap}
+  .spec-table td:first-child{font-weight:700;color:var(--max-gray);white-space:nowrap}
+  .format-example{font-family:Consolas,'Courier New',monospace;background:var(--code-bg);color:var(--code-text);padding:10px 12px;border-radius:10px;display:block;overflow:auto}
+
   .common-trace{border-top:5px solid var(--max-gray)}
   .pcan-panel{border:1px solid #BFC3C7;border-radius:12px;background:#ECEFF1;padding:10px;margin-top:12px;display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
   .pcan-group{border:1px solid #C9CDD1;border-radius:10px;background:#F9FAFA;padding:8px;display:grid;gap:7px;align-content:start;min-width:145px}
@@ -71,18 +78,39 @@
   .trace-actions-note{margin:8px 0 0}
   @media(max-width:640px){.pcan-panel{display:grid;grid-template-columns:1fr;gap:8px}.pcan-group{min-width:0}.trace-status{margin-left:0;justify-content:center}.tool-btn{width:44px}.text-tool-btn{width:auto}}
   @media(max-width:640px){main{padding:10px;gap:12px}section{padding:14px;border-radius:14px}.grid{grid-template-columns:1fr}.row{display:grid;grid-template-columns:1fr;align-items:stretch}.tabs{display:grid;grid-template-columns:1fr}button{width:100%}.trace{height:320px;font-size:12px}th,td{font-size:13px;padding:7px}}
+
+  .internal-badge{display:inline-block;background:var(--max-red);color:#fff;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:700;margin-left:8px;vertical-align:middle}
+  .reference-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+  .reference-category{grid-column:1/-1;margin-top:6px;font-size:14px;text-transform:uppercase;letter-spacing:.04em;font-weight:700;color:var(--max-gray)}
+  .reference-card{border:1px solid var(--border);border-radius:16px;background:#fff;padding:14px;display:grid;gap:8px;box-shadow:0 1px 5px rgba(0,0,0,.04)}
+  .reference-card h3{margin:0;font-size:17px}
+  .reference-card .type-pill{justify-self:start}
+  .link-button{display:inline-flex;align-items:center;justify-content:center;min-height:42px;border-radius:10px;border:1px solid var(--max-red);background:var(--max-red);color:#fff;text-decoration:none;font-weight:700;padding:10px 14px;font-family:'KoHo',Arial,sans-serif}
+  .link-button.secondary{background:var(--max-gray);border-color:var(--max-gray)}
+  .ref-actions{align-items:center}.ref-action-box{align-self:end}
+  .reference-viewer{margin-top:14px;border:1px solid var(--border);border-radius:14px;background:var(--max-light-gray);padding:12px;min-height:180px;overflow:auto}
+  .reference-frame{width:100%;height:620px;border:1px solid var(--border);border-radius:12px;background:#fff}
+  .excel-sheet-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .excel-sheet-tab{min-height:34px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:#fff;color:var(--max-gray);font-weight:700}
+  .excel-sheet-tab.active{background:var(--max-gray);color:#fff;border-color:var(--max-gray)}
+  .excel-preview-table{max-height:560px;overflow:auto;border:1px solid var(--border);border-radius:12px;background:#fff}
+  .excel-preview-table table{margin:0;display:table;width:100%}
+  .excel-preview-table td,.excel-preview-table th{font-size:12px;min-width:90px;max-width:320px;white-space:normal}
+  .viewer-note{margin-bottom:10px}
+
 </style>
 </head>
 <body>
 <header>
-  <h1>MAX-SAFE CAN Message Calculator</h1>
-  <div class="muted">J1939 standard messages and future MAX-SAFE proprietary messages in one shared CAN trace.</div>
+  <h1>MAX-SAFE Internal CAN Message Calculator <span class="internal-badge">Internal use only</span></h1>
+  <div class="muted">Company confidential tool for J1939 standard messages, future MAX-SAFE proprietary messages, and internal reference documents.</div>
 </header>
 <main>
 <section>
   <div class="tabs main-tabs">
     <button class="tab active" onclick="showGroupedView(event,'main-view','j1939Standard')">J1939 Standard</button>
     <button class="tab" onclick="showGroupedView(event,'main-view','maxSafeProprietary')">MAX-SAFE Proprietary</button>
+    <button class="tab" onclick="showGroupedView(event,'main-view','reference')">Reference</button>
   </div>
 </section>
 
@@ -93,6 +121,7 @@
     <div class="tabs level-tabs" aria-label="J1939 standard message tabs">
       <button class="tab active" onclick="showGroupedView(event,'standard-view','standardDm1')">DM1</button>
       <button class="tab" onclick="showGroupedView(event,'standard-view','software')">Software ID</button>
+      <button class="tab" onclick="showGroupedView(event,'standard-view','serialNumber')">Serial Number</button>
     </div>
   </section>
 
@@ -194,11 +223,30 @@
 <section>
   <h2>Software ID - PGN 65242 / SOFT</h2>
   <details class="help">
-    <summary>How Software ID works - expand for explanation</summary>
-    <p>Enter the MAX-SAFE software number, for example <strong>MSB-5.39.89</strong>. In standard mode, the tool builds the J1939 Software Identification message.</p>
-    <p class="muted small">PGN <strong>65242 / 0x00FEDA</strong> is an <strong>on-request</strong> message, not a cyclic message. The <strong>Software button in the common trace area</strong> button simulates an external request for PGN 65242. MAX-SAFE then sends the software identification response one time only.</p>
-    <p class="muted small">Standard mode uses Byte 1 as the number of software identification fields, then sends the software text as ASCII and terminates it with <strong>*</strong>. If the software text is 6 characters or fewer, the result fits in one 8-byte CAN frame. Longer text is sent using J1939 Transport Protocol BAM + TP.DT frames.</p>
-    <p class="muted small">The software response shares the same trace buffer as DM1. If the DM1 trace is already running at 1000 ms, clicking the request button inserts the software response into the trace at the click time, between the DM1 fault lines.</p>
+    <summary>J1939 Software Identification notes</summary>
+    <div class="spec-card">
+      <div class="spec-title">PGN 65242 - Software Identification - SOFT</div>
+      <table class="spec-table">
+        <tr><th>Item</th><th>Value</th></tr>
+        <tr><td>Transmission Repetition Rate</td><td>On request</td></tr>
+        <tr><td>Data Length</td><td>Variable bytes</td></tr>
+        <tr><td>Data Page</td><td>0</td></tr>
+        <tr><td>PDU Format</td><td>254</td></tr>
+        <tr><td>PDU Specific</td><td>218</td></tr>
+        <tr><td>Default Priority</td><td>6</td></tr>
+        <tr><td>Parameter Group Number</td><td>65242 / 0x00FEDA</td></tr>
+      </table>
+      <div class="spec-subtitle">Payload structure</div>
+      <table class="spec-table">
+        <tr><th>Byte position</th><th>Length</th><th>Description</th><th>SPN</th></tr>
+        <tr><td>1</td><td>1 byte</td><td>Number of Software Identification Fields</td><td>965</td></tr>
+        <tr><td>2-N</td><td>Variable, up to 200 characters</td><td>Software Identification, ASCII <strong>*</strong> delimited</td><td>234</td></tr>
+      </table>
+      <div class="spec-subtitle">MAX-SAFE use in this calculator</div>
+      <p class="muted small">Enter the software number, for example <strong>MSB-5.39.89</strong>. The calculator sends one software field, so Byte 1 is always <strong>01h</strong>. The tool adds the final ASCII <strong>*</strong> delimiter automatically.</p>
+      <span class="format-example">01 + "MSB-5.39.89*"</span>
+      <p class="muted small">PGN 65242 is <strong>on request only</strong>. Use <strong>Common CAN Trace &gt; Customer requests &gt; Software</strong> to append the response once. If the total payload is longer than 8 bytes, the calculator uses J1939 Transport Protocol BAM + TP.DT frames.</p>
+    </div>
   </details>
   <div class="grid" style="margin-top:14px">
     <div>
@@ -239,6 +287,90 @@
 </section>
 
 </div>
+
+  <div id="serialNumber" class="view standard-view">
+<section>
+  <h2>Serial Number - PGN 65259 / Component Identification</h2>
+  <details class="help">
+    <summary>J1939 Component Identification notes</summary>
+    <div class="spec-card">
+      <div class="spec-title">PGN 65259 - Component Identification - CI</div>
+      <table class="spec-table">
+        <tr><th>Item</th><th>Value</th></tr>
+        <tr><td>Transmission Repetition Rate</td><td>On request</td></tr>
+        <tr><td>Data Length</td><td>Variable bytes</td></tr>
+        <tr><td>Data Page</td><td>0</td></tr>
+        <tr><td>PDU Format</td><td>254</td></tr>
+        <tr><td>PDU Specific</td><td>235</td></tr>
+        <tr><td>Default Priority</td><td>6</td></tr>
+        <tr><td>Parameter Group Number</td><td>65259 / 0x00FEEB</td></tr>
+      </table>
+      <div class="spec-subtitle">Payload structure</div>
+      <table class="spec-table">
+        <tr><th>Field</th><th>Length</th><th>Description</th><th>SPN</th></tr>
+        <tr><td>a</td><td>5 bytes</td><td>Make</td><td>586</td></tr>
+        <tr><td>b</td><td>Variable, up to 200 characters</td><td>Model, ASCII <strong>*</strong> delimited</td><td>587</td></tr>
+        <tr><td>c</td><td>Variable, up to 200 characters</td><td>Serial Number, ASCII <strong>*</strong> delimited</td><td>588</td></tr>
+        <tr><td>d</td><td>Variable, up to 200 characters</td><td>Unit Number, ASCII <strong>*</strong> delimited</td><td>233</td></tr>
+      </table>
+      <div class="spec-subtitle">Field order</div>
+      <span class="format-example">Make*Model*Serial Number*Unit Number*</span>
+      <p class="muted small">Make, Model, Serial Number, and Unit Number are optional in the standard message, but the ASCII <strong>*</strong> delimiter is always required. In this calculator, <strong>Serial Number is mandatory</strong> because this tab is used to test the MAX-SAFE serial number response.</p>
+      <p class="muted small">If Make, Model, and Unit Number are left blank, the payload still keeps their delimiters. Example for serial only: <strong>**SN-0020000**</strong>.</p>
+    </div>
+  </details>
+  <div class="grid" style="margin-top:14px">
+    <div>
+      <label>Serial Number <span class="muted small">required</span></label>
+      <input id="serialText" value="SN-0020000" placeholder="Example: SN-0020000" />
+    </div>
+    <div>
+      <label>Make <span class="muted small">optional, max 5 characters</span></label>
+      <input id="serialMake" value="" maxlength="5" placeholder="Optional" />
+    </div>
+    <div>
+      <label>Model <span class="muted small">optional</span></label>
+      <input id="serialModel" value="" placeholder="Optional" />
+    </div>
+    <div>
+      <label>Unit Number <span class="muted small">optional</span></label>
+      <input id="serialUnit" value="" placeholder="Optional" />
+    </div>
+    <div>
+      <label>Source Address SA hex</label>
+      <input id="serialSa" value="E7" maxlength="2" />
+    </div>
+    <div>
+      <label>Priority</label>
+      <input id="serialPriority" type="number" min="0" max="7" value="6" />
+    </div>
+  </div>
+  <p class="muted small">The Component Identification output updates automatically as you type. To send it into the shared CAN log, use <strong>Common CAN Trace &gt; Customer requests &gt; Serial</strong>.</p>
+  <div id="serialNotice" class="notice" style="display:none"></div>
+</section>
+
+<section>
+  <h2>Serial Number Outcome</h2>
+  <div id="serialSummary"></div>
+
+  <details class="help">
+    <summary>Payload byte explanation</summary>
+    <div id="serialByteTable"></div>
+  </details>
+
+  <details class="help">
+    <summary>CAN frame sequence</summary>
+    <div id="serialFrameTable"></div>
+  </details>
+
+  <details class="help">
+    <summary>Manual calculation details</summary>
+    <pre id="serialManual"></pre>
+  </details>
+</section>
+
+</div>
+
 </div>
 
 <div id="maxSafeProprietary" class="view main-view">
@@ -253,6 +385,51 @@
   </section>
 </div>
 
+
+<div id="reference" class="view main-view">
+  <section>
+    <h2>Reference Library</h2>
+    <div class="notice"><strong>Internal use only:</strong> this calculator contains SAE standards and internal engineering references. Do not share this file or the bundled reference documents outside the company.</div>
+    <details class="help">
+      <summary>How to use the reference library</summary>
+      <p>Use the cards below to view or download the attached standards and supporting files used by this calculator. The documents are sorted into standard groups so developers can quickly find the correct reference.</p>
+      <p class="muted small">PDF files open in the built-in viewer. The J1939DA workbook includes a lightweight preview for quick reference, and each document has a direct download link.</p>
+    </details>
+    <div id="referenceCards" class="reference-grid" style="margin-top:14px"></div>
+  </section>
+
+  <section>
+    <h2>Reference Viewer</h2>
+    <div class="grid">
+      <div>
+        <label>Reference document</label>
+        <select id="referenceSelect" onchange="showReferenceDocument(this.value)"></select>
+      </div>
+      <div class="ref-action-box">
+        <label>Actions</label>
+        <div class="row ref-actions">
+          <a id="referenceOpenLink" class="link-button secondary" target="_blank" rel="noopener">Open</a>
+          <a id="referenceDownloadLink" class="link-button" download>Download</a>
+        </div>
+      </div>
+    </div>
+    <div id="referenceSummary" class="simple-card" style="margin-top:12px"></div>
+    <div id="referenceViewer" class="reference-viewer"></div>
+  </section>
+
+  <section>
+    <h2>Internal CAN Development Workbook</h2>
+    <p class="muted small">This is the live SharePoint workbook used by the team to develop and review MAX-SAFE CAN messages. It requires company access.</p>
+    <div class="row" style="margin-bottom:10px">
+      <a class="link-button" href="https://sgesco.sharepoint.com/:x:/s/AllCompany-ResearchandDevelopmentStrategy/IQBhP7-wKNE-Rqz2sBP7MOs9Af3-oviTKMRQK42qY0rEijo?e=C34HCd" target="_blank" rel="noopener">Open live Excel sheet</a>
+    </div>
+    <details class="help">
+      <summary>About this workbook</summary>
+      <p class="muted small">The live workbook is stored in SharePoint and may require company sign-in. Use the button above to open it in Excel Online or your browser.</p>
+    </details>
+  </section>
+</div>
+
 <section id="commonTraceSection" class="common-trace">
   <h2>Common CAN Trace</h2>
   <details class="help">
@@ -260,7 +437,7 @@
     <p>The trace area represents one shared CAN bus log for the whole calculator. Every tab and every future message type writes to the same trace buffer and the same export file.</p>
     <p class="muted small"><strong>Start</strong> begins the cyclic trace source currently implemented in the calculator. At this stage, that cyclic source is DM1. The Start button is disabled while the trace is already running.</p>
     <p class="muted small"><strong>Stop</strong> stops the cyclic trace source. It is only active while the trace is running. <strong>Reset</strong> clears the trace buffer and remains available all the time.</p>
-    <p class="muted small"><strong>Customer requests &gt; Software</strong> simulates a request for PGN 65242 and appends the Software Identification response once. If DM1 is running every 1000 ms, the SOFT response is inserted between the DM1 frames at the click time.</p>
+    <p class="muted small"><strong>Customer requests</strong> simulates external J1939 requests. <strong>Software</strong> appends PGN 65242 once, and <strong>Serial</strong> appends PGN 65259 once. If DM1 is running every 1000 ms, the requested response is inserted between the DM1 frames at the click time.</p>
   </details>
 
   <div class="pcan-panel" role="toolbar" aria-label="Common CAN trace controls">
@@ -289,6 +466,7 @@
       <div class="pcan-group-title">Customer requests</div>
       <div class="pcan-toolbar">
         <button class="text-tool-btn" onclick="requestSoftwareMessage()" title="Request Software ID once" aria-label="Request Software ID once">Software</button>
+        <button class="text-tool-btn" onclick="requestSerialMessage()" title="Request Serial Number once" aria-label="Request Serial Number once">Serial</button>
       </div>
     </div>
 
@@ -303,7 +481,7 @@
     <div id="traceStatus" class="trace-status" aria-live="polite"><span class="status-dot"></span><span>Stopped</span></div>
   </div>
 
-  <p class="muted small trace-actions-note">Start and Stop control cyclic messages. Customer request buttons append one-shot messages into the same trace, so future request types can be added beside Software without changing the common trace design.</p>
+  <p class="muted small trace-actions-note">Start and Stop control cyclic messages. Customer request buttons append one-shot messages into the same trace, so future request types can be added beside Software and Serial without changing the common trace design.</p>
   <div id="traceNotice" class="notice" style="display:none"></div>
   <div class="trace" id="trace"></div>
 </section>
@@ -355,13 +533,20 @@ function init(){
   populateFaultSelect('simpleFault');
   populateFaultSelect('devFault');
   const softSa=document.getElementById('softSa'), softPriority=document.getElementById('softPriority');
+  const serialSa=document.getElementById('serialSa'), serialPriority=document.getElementById('serialPriority');
   const sa=document.getElementById('sa'), priority=document.getElementById('priority');
-  if(softSa&&sa){softSa.value=sa.value; softSa.addEventListener('input',()=>{sa.value=softSa.value; render();}); sa.addEventListener('input',()=>{softSa.value=sa.value; renderSoftware();});}
-  if(softPriority&&priority){softPriority.value=priority.value; softPriority.addEventListener('input',()=>{priority.value=softPriority.value; render();}); priority.addEventListener('input',()=>{softPriority.value=priority.value; renderSoftware();});}
+  function syncSourceAddress(from,toRender){ if(!from)return; from.addEventListener('input',()=>{[sa,softSa,serialSa].filter(Boolean).forEach(el=>{if(el!==from)el.value=from.value;}); toRender();}); }
+  function syncPriority(from,toRender){ if(!from)return; from.addEventListener('input',()=>{[priority,softPriority,serialPriority].filter(Boolean).forEach(el=>{if(el!==from)el.value=from.value;}); toRender();}); }
+  if(softSa&&sa) softSa.value=sa.value; if(serialSa&&sa) serialSa.value=sa.value;
+  if(softPriority&&priority) softPriority.value=priority.value; if(serialPriority&&priority) serialPriority.value=priority.value;
+  [sa,softSa,serialSa].forEach(el=>syncSourceAddress(el,render));
+  [priority,softPriority,serialPriority].forEach(el=>syncPriority(el,render));
   document.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',render));
   clearTrace();
   clearFaults();
   renderSoftware();
+  renderSerial();
+  initReference();
 }
 function faultOptionText(f){return `${String(f.no).padStart(2,'0')}. ${f.fault} - SPN ${f.prop?'Proprietary '+f.spn:f.spn} [0x${hex(f.spn, f.spn>255?5:2)}], FMI ${f.fmi}`}
 function populateFaultSelect(id){const el=document.getElementById(id); if(!el)return; el.innerHTML='<option value="">Select fault...</option>'; faultList.forEach((f,i)=>{let o=document.createElement('option');o.value=i;o.textContent=faultOptionText(f);el.appendChild(o)})}
@@ -413,6 +598,8 @@ function render(){
   const man=document.getElementById('manual');
   if(man) man.textContent=m.join('\n');
   renderSoftware();
+  renderSerial();
+  initReference();
 }
 function frame(){const f=currentRotationFault(); const c=calc(f); return [hex(c.canId,8),c.payload,f];}
 let traceSource='dm1';
@@ -486,12 +673,42 @@ function requestSoftwareMessage(){
   const build=buildSoftwareMessage();
   if(!build.valid){
     const notice=document.getElementById('softwareNotice');
-    if(notice){notice.style.display='block'; notice.innerHTML=`<strong>${build.mode==='proprietary'?'Proprietary option':'Software Identification'}:</strong> ${build.error}`;}
-    showTraceNotice(`<strong>${build.mode==='proprietary'?'Proprietary option':'Software Identification'}:</strong> ${build.error}`, true);
+    if(notice){notice.style.display='block'; notice.innerHTML=`<strong>Software Identification:</strong> ${build.error}`;}
+    showTraceNotice(`<strong>Software Identification:</strong> ${build.error}`, true);
     return;
   }
   appendSoftwareTrace(build);
   showTraceNotice(`<strong>Software request sent:</strong> ${build.frames.length} frame${build.frames.length===1?'':'s'} appended to the shared trace for ${build.text}.`, false);
+}
+function appendSerialTrace(buildArg=null){
+  const build=buildArg || buildSerialMessage();
+  const t0=traceNow();
+  if(!build.valid){
+    const notice=document.getElementById('serialNotice');
+    if(notice){notice.style.display='block'; notice.innerHTML=`<strong>Serial Number:</strong> ${build.error}`;}
+    return;
+  }
+  build.frames.forEach((fr,idx)=>{
+    const t=(t0+idx*0.050);
+    const time=t.toFixed(3).padStart(8,' ');
+    const data=fr.data.slice();
+    const comment=`CI on-request - ${fr.comment}`;
+    const line=`${time}   ${fr.canId}   ${fr.dlc}   ${data.map(b=>hex(b)).join(' ')}   ; ${comment}`;
+    traceLog.push({time:t, canId:fr.canId, dlc:fr.dlc, data, comment, mode:'CI'});
+    appendLineToTrace(line);
+  });
+}
+function requestSerialMessage(){
+  renderSerial();
+  const build=buildSerialMessage();
+  if(!build.valid){
+    const notice=document.getElementById('serialNotice');
+    if(notice){notice.style.display='block'; notice.innerHTML=`<strong>Serial Number:</strong> ${build.error}`;}
+    showTraceNotice(`<strong>Serial Number:</strong> ${build.error}`, true);
+    return;
+  }
+  appendSerialTrace(build);
+  showTraceNotice(`<strong>Serial request sent:</strong> ${build.frames.length} frame${build.frames.length===1?'':'s'} appended to the shared trace for ${build.serial}.`, false);
 }
 function appendTrace(){appendDM1Trace();}
 function startSim(){
@@ -515,45 +732,47 @@ function sortedTraceLog(){return traceLog.slice().sort((a,b)=>a.time-b.time)}
 
 function softPriorityValue(){return parseInt(document.getElementById('softPriority')?.value || document.getElementById('priority')?.value || '6')||6}
 function softSaValue(){return parseHexByte(document.getElementById('softSa')?.value || document.getElementById('sa')?.value || 'E7')}
+function serialPriorityValue(){return parseInt(document.getElementById('serialPriority')?.value || document.getElementById('priority')?.value || '6')||6}
+function serialSaValue(){return parseHexByte(document.getElementById('serialSa')?.value || document.getElementById('sa')?.value || 'E7')}
 function asciiBytes(text){return Array.from(text).map(ch=>ch.charCodeAt(0)&0xFF)}
 function printableAsciiOnly(text){return Array.from(text).every(ch=>{const c=ch.charCodeAt(0); return c>=32 && c<=126;})}
 function pad8(arr){const out=arr.slice(); while(out.length<8)out.push(0xFF); return out.slice(0,8)}
-function buildSoftwareMessage(){
-  const mode=document.getElementById('softMode')?.value || 'standard';
-  const text=(document.getElementById('softText')?.value || '').trim();
-  const pri=softPriorityValue();
-  const sa=softSaValue();
-  if(mode==='proprietary'){
-    return {valid:false, mode, error:'Proprietary software identification is not defined yet. Define the proprietary PGN, byte layout, scaling, and transmission rule before using this option.'};
-  }
-  if(!text){
-    return {valid:false, mode, error:'Enter a software number first.'};
-  }
-  if(text.includes('*')){
-    return {valid:false, mode, error:'Do not include * in the software number. The tool adds the standard * delimiter automatically.'};
-  }
-  if(!printableAsciiOnly(text)){
-    return {valid:false, mode, error:'Use printable single-byte ASCII characters only for the standard software identification text.'};
-  }
-  const payload=[0x01,...asciiBytes(text),0x2A];
-  const single=payload.length<=8;
-  const pgn=0x00FEDA;
-  const canId=((pri&7)<<26)|(0xFE<<16)|(0xDA<<8)|sa;
+function pgnCanId(pgn,pri,sa){return ((pri&7)<<26)|((pgn&0x3FFFF)<<8)|sa}
+function buildJ1939Frames(pgn,payload,pri,sa,label){
+  const canId=pgnCanId(pgn,pri,sa);
   const frames=[];
-  if(single){
-    frames.push({canId:hex(canId,8), dlc:8, data:pad8(payload), comment:'PGN 65242 Software Identification single-frame response'});
+  if(payload.length<=8){
+    frames.push({canId:hex(canId,8), dlc:8, data:pad8(payload), comment:`${label} single-frame response`});
   }else{
     const cmId=((pri&7)<<26)|(0xEC<<16)|(0xFF<<8)|sa;
     const dtId=((pri&7)<<26)|(0xEB<<16)|(0xFF<<8)|sa;
     const packets=Math.ceil(payload.length/7);
-    frames.push({canId:hex(cmId,8), dlc:8, data:[0x20,payload.length&0xFF,(payload.length>>8)&0xFF,packets,0xFF,0xDA,0xFE,0x00], comment:'TP.CM BAM for PGN 65242 / 00FEDA'});
+    frames.push({canId:hex(cmId,8), dlc:8, data:[0x20,payload.length&0xFF,(payload.length>>8)&0xFF,packets,0xFF,pgn&0xFF,(pgn>>8)&0xFF,(pgn>>16)&0xFF], comment:`TP.CM BAM for ${label}`});
     for(let i=0;i<packets;i++){
       const chunk=payload.slice(i*7,i*7+7);
       while(chunk.length<7)chunk.push(0xFF);
       frames.push({canId:hex(dtId,8), dlc:8, data:[i+1,...chunk], comment:`TP.DT packet ${i+1} of ${packets}`});
     }
   }
-  return {valid:true, mode, text, pri, sa, pgn, canId:hex(canId,8), payload, single, frames};
+  return {canId, frames, single:payload.length<=8};
+}
+function buildSoftwareMessage(){
+  const text=(document.getElementById('softText')?.value || '').trim();
+  const pri=softPriorityValue();
+  const sa=softSaValue();
+  if(!text){
+    return {valid:false, error:'Enter a software number first.'};
+  }
+  if(text.includes('*')){
+    return {valid:false, error:'Do not include * in the software number. The tool adds the standard * delimiter automatically.'};
+  }
+  if(!printableAsciiOnly(text)){
+    return {valid:false, error:'Use printable single-byte ASCII characters only for the standard software identification text.'};
+  }
+  const payload=[0x01,...asciiBytes(text),0x2A];
+  const pgn=0x00FEDA;
+  const frameBuild=buildJ1939Frames(pgn,payload,pri,sa,'PGN 65242 Software Identification');
+  return {valid:true, text, pri, sa, pgn, canId:hex(frameBuild.canId,8), payload, single:frameBuild.single, frames:frameBuild.frames};
 }
 function renderSoftware(){
   const notice=document.getElementById('softwareNotice');
@@ -564,7 +783,7 @@ function renderSoftware(){
   if(!summary||!byteTable||!frameTable||!manual)return;
   const build=buildSoftwareMessage();
   if(!build.valid){
-    if(notice){notice.style.display='block'; notice.innerHTML=`<strong>${build.mode==='proprietary'?'Proprietary option':'Software Identification'}:</strong> ${build.error}`;}
+    if(notice){notice.style.display='block'; notice.innerHTML=`<strong>Software Identification:</strong> ${build.error}`;}
     summary.innerHTML='<p><span class="pill warn">Not available</span></p>';
     byteTable.innerHTML='';
     frameTable.innerHTML='';
@@ -588,11 +807,7 @@ Decoded: 1 software field = ${payloadAscii}</pre>`;
     rows+=`<tr><td>Payload byte ${i+1}</td><td>${hex(b)}</td><td>${b.toString(2).padStart(8,'0')}</td><td>${i===0?'--':String.fromCharCode(b)}</td><td>${meaning}</td></tr>`;
   });
   byteTable.innerHTML=`<table><tr><th>Byte</th><th>Hex</th><th>Binary</th><th>ASCII</th><th>Meaning</th></tr>${rows}</table>`;
-  let fRows='';
-  build.frames.forEach((fr,i)=>{
-    fRows+=`<tr><td>${i+1}</td><td>${fr.canId}</td><td>${fr.dlc}</td><td>${fr.data.map(b=>hex(b)).join(' ')}</td><td>${fr.comment}</td></tr>`;
-  });
-  frameTable.innerHTML=`<table><tr><th>Frame</th><th>CAN ID</th><th>DLC</th><th>Data bytes</th><th>Meaning</th></tr>${fRows}</table>`;
+  renderFrameTable(frameTable, build.frames);
   const m=[];
   m.push(`Software text = "${build.text}"`);
   m.push(`Transmission rule = On request only; not cyclic`);
@@ -603,20 +818,177 @@ Decoded: 1 software field = ${payloadAscii}</pre>`;
   m.push(`Payload = ${payloadHex}`);
   m.push(`Payload length = ${build.payload.length} bytes`);
   m.push('');
+  appendTransportDetails(m,build,'DA FE 00','PGN 65242 / 0x00FEDA');
+  manual.textContent=m.join('\n');
+}
+function serialFieldValue(id){return (document.getElementById(id)?.value || '').trim()}
+function buildSerialPayloadInfo(){
+  const make=serialFieldValue('serialMake');
+  const model=serialFieldValue('serialModel');
+  const serial=serialFieldValue('serialText');
+  const unit=serialFieldValue('serialUnit');
+  if(!serial) return {valid:false, error:'Enter a Serial Number first. Serial Number is required for this calculator.'};
+  const fields=[['Make',make,586],['Model',model,587],['Serial Number',serial,588],['Unit Number',unit,233]];
+  for(const [name,value] of fields){
+    if(value.includes('*')) return {valid:false, error:`Do not include * in ${name}. The tool adds the required delimiters automatically.`};
+    if(!printableAsciiOnly(value)) return {valid:false, error:`Use printable single-byte ASCII characters only in ${name}.`};
+  }
+  if(make.length>5) return {valid:false, error:'Make is limited to 5 characters in this calculator.'};
+  const payload=[];
+  const byteInfo=[];
+  fields.forEach(([name,value,spn])=>{
+    for(const b of asciiBytes(value)){
+      payload.push(b);
+      byteInfo.push({field:name, spn, ascii:String.fromCharCode(b), meaning:`SPN ${spn} - ${name} character "${String.fromCharCode(b)}"`});
+    }
+    payload.push(0x2A);
+    byteInfo.push({field:name, spn, ascii:'*', meaning:`ASCII * delimiter - end of ${name} field${value?'':' (empty field)'}`});
+  });
+  return {valid:true, make, model, serial, unit, payload, byteInfo, decoded:`${make}*${model}*${serial}*${unit}*`};
+}
+function buildSerialMessage(){
+  const pri=serialPriorityValue();
+  const sa=serialSaValue();
+  const info=buildSerialPayloadInfo();
+  if(!info.valid) return {...info};
+  const pgn=0x00FEEB;
+  const frameBuild=buildJ1939Frames(pgn,info.payload,pri,sa,'PGN 65259 Component Identification');
+  return {valid:true, ...info, pri, sa, pgn, canId:hex(frameBuild.canId,8), single:frameBuild.single, frames:frameBuild.frames};
+}
+function renderSerial(){
+  const notice=document.getElementById('serialNotice');
+  const summary=document.getElementById('serialSummary');
+  const byteTable=document.getElementById('serialByteTable');
+  const frameTable=document.getElementById('serialFrameTable');
+  const manual=document.getElementById('serialManual');
+  if(!summary||!byteTable||!frameTable||!manual)return;
+  const build=buildSerialMessage();
+  if(!build.valid){
+    if(notice){notice.style.display='block'; notice.innerHTML=`<strong>Serial Number:</strong> ${build.error}`;}
+    summary.innerHTML='<p><span class="pill warn">Not available</span></p>';
+    byteTable.innerHTML='';
+    frameTable.innerHTML='';
+    manual.textContent=build.error;
+    return;
+  }
+  if(notice){notice.style.display='none'; notice.innerHTML='';}
+  const payloadHex=build.payload.map(b=>hex(b)).join(' ');
+  summary.innerHTML=`<p><span class="pill ${build.single?'ok':'gray'}">${build.single?'Single CAN frame':'Transport Protocol BAM + TP.DT'}</span></p><pre>PGN: 65259 / 0x00FEEB / Component Identification
+CAN ID: ${build.single?build.canId:'Transport Protocol frames shown below'}
+Payload length: ${build.payload.length} bytes
+Payload: ${payloadHex}
+Decoded: ${build.decoded}</pre>`;
+  let rows='';
+  build.byteInfo.forEach((info,i)=>{
+    const b=build.payload[i];
+    rows+=`<tr><td>Payload byte ${i+1}</td><td>${hex(b)}</td><td>${b.toString(2).padStart(8,'0')}</td><td>${info.ascii}</td><td>${info.field}</td><td>${info.meaning}</td></tr>`;
+  });
+  byteTable.innerHTML=`<table><tr><th>Byte</th><th>Hex</th><th>Binary</th><th>ASCII</th><th>Field</th><th>Meaning</th></tr>${rows}</table>`;
+  renderFrameTable(frameTable, build.frames);
+  const m=[];
+  m.push(`Make = "${build.make || '(empty)'}"`);
+  m.push(`Model = "${build.model || '(empty)'}"`);
+  m.push(`Serial Number = "${build.serial}"`);
+  m.push(`Unit Number = "${build.unit || '(empty)'}"`);
+  m.push(`Transmission rule = On request only; not cyclic`);
+  m.push(`Standard payload order = Make*Model*Serial Number*Unit Number*`);
+  m.push(`Decoded payload = ${build.decoded}`);
+  m.push(`Payload = ${payloadHex}`);
+  m.push(`Payload length = ${build.payload.length} bytes`);
+  m.push('');
+  appendTransportDetails(m,build,'EB FE 00','PGN 65259 / 0x00FEEB');
+  manual.textContent=m.join('\n');
+}
+function renderFrameTable(frameTable,frames){
+  let fRows='';
+  frames.forEach((fr,i)=>{
+    fRows+=`<tr><td>${i+1}</td><td>${fr.canId}</td><td>${fr.dlc}</td><td>${fr.data.map(b=>hex(b)).join(' ')}</td><td>${fr.comment}</td></tr>`;
+  });
+  frameTable.innerHTML=`<table><tr><th>Frame</th><th>CAN ID</th><th>DLC</th><th>Data bytes</th><th>Meaning</th></tr>${fRows}</table>`;
+}
+function appendTransportDetails(m,build,targetBytes,targetName){
   if(build.single){
     m.push('Payload length is 8 bytes or less, so it fits in one CAN frame.');
-    m.push(`CAN ID = (priority << 26) | (0xFEDA << 8) | SA`);
-    m.push(`       = (${build.pri} << 26) | 0x00FEDA00 | 0x${hex(build.sa)}`);
+    m.push(`CAN ID = (priority << 26) | (PGN << 8) | SA`);
+    m.push(`       = (${build.pri} << 26) | 0x${hex(build.pgn,6)}00 | 0x${hex(build.sa)}`);
     m.push(`       = 0x${build.canId}`);
     m.push(`Data   = ${build.frames[0].data.map(b=>hex(b)).join(' ')}`);
   }else{
     m.push('Payload length is greater than 8 bytes, so J1939 Transport Protocol is used.');
     m.push(`TP.CM BAM announces ${build.payload.length} bytes in ${build.frames.length-1} TP.DT packet(s).`);
-    m.push('Target PGN bytes in BAM are DA FE 00, which is PGN 65242 / 0x00FEDA in little-endian byte order.');
+    m.push(`Target PGN bytes in BAM are ${targetBytes}, which is ${targetName} in little-endian byte order.`);
     build.frames.forEach((fr,i)=>m.push(`Frame ${i+1}: ${fr.canId}   ${fr.data.map(b=>hex(b)).join(' ')}`));
   }
-  manual.textContent=m.join('\n');
 }
+
+const referenceDocuments = [{"id": "j1939_71_2025", "category": "Core J1939 Standards", "type": "pdf", "title": "SAE J1939-71 (2025) - Vehicle Application Layer", "file": "reference/pdfs/SAE_J1939-71_2025_Vehicle_Application_Layer.pdf", "summary": "Current application-layer reference for J1939 PG conventions, SP placement, text data rules, and transmission-rate guidance."}, {"id": "j1939_71_2003", "category": "Core J1939 Standards", "type": "pdf", "title": "SAE J1939-71 (2003) - Vehicle Application Layer, Legacy", "file": "reference/pdfs/SAE_J1939-71_2003_Vehicle_Application_Layer_Legacy.pdf", "summary": "Legacy J1939-71 reference containing historical SPN and PGN definitions useful for checking older PGN layouts such as SOFT and CI."}, {"id": "j1939_73_2024", "category": "Core J1939 Standards", "type": "pdf", "title": "SAE J1939-73 (2024) - Application Layer Diagnostics", "file": "reference/pdfs/SAE_J1939-73_2024_Application_Layer_Diagnostics.pdf", "summary": "Diagnostic reference for DM messages, DTC encoding, lamp behavior, FMI definitions, and diagnostic request/response behavior."}, {"id": "j1939da_terms", "category": "J1939DA Digital Annex 202604", "type": "pdf", "title": "SAE J1939DA 202604 - Terms and License", "file": "reference/j1939da/SAE_J1939DA_202604_Terms_and_License.pdf", "summary": "License and terms document that governs internal use of the J1939 Digital Annex release."}, {"id": "j1939da_support", "category": "J1939DA Digital Annex 202604", "type": "pdf", "title": "SAE J1939DA 202604 - Support Information", "file": "reference/j1939da/SAE_J1939DA_202604_Support_Information.pdf", "summary": "Support notes for the Digital Annex, including additional technical information that supports the SP and PG workbook data."}, {"id": "j1939da_workbook", "category": "J1939DA Digital Annex 202604", "type": "xlsx", "title": "SAE J1939DA 202604 - Digital Annex Workbook", "file": "reference/j1939da/SAE_J1939DA_202604_Digital_Annex.xlsx", "summary": "Workbook containing the J1939 Digital Annex tables for SPs, PGs, SLOTs, manufacturer IDs, source addresses, and supporting reference lists."}];
+const j1939daWorkbookPreview = [{"name": "Documentation", "dimension": "A1:D524", "rows": [["", "", "J1939™DA - DIGITAL ANNEX OF SERIAL CONTROL AND COMMUNICATION \nHEAVY DUTY VEHICLE NETWORK DATA - APR2026", "", "", "", "", "", "", ""], ["", "1.", "RATIONALE", "", "", "", "", "", "", ""], ["", "", "This revision of the J1939 Digital Annex includes changes approved at the February 2026 (1Q2026) meeting.", "", "", "", "", "", "", ""], ["", "1.1", "SCOPE", "", "", "", "", "", "", ""], ["", "", "This document is intended to supplement the J1939 documents by offering the J1939 information in a form that can be sorted and searched for easier use.", "", "", "", "", "", "", ""], ["", "1.2", "List of J1939 Data Worksheets in Workbook", "", "", "", "", "", "", ""], ["", "", "SAE J1939DA Schema Changes", "", "", "", "", "", "", ""], ["", "", "SPs and PGs", "", "", "", "", "", "", ""], ["", "", "SLOTs", "", "", "", "", "", "", ""], ["", "", "Abbreviations", "", "", "", "", "", "", ""], ["", "", "Industry Groups (Table B1)", "", "", "", "", "", "", ""], ["", "", "Preferred Addresses - Industry Group 0 - Global (Table B2)", "", "", "", "", "", "", ""], ["", "", "Preferred Addresses - Industry Group 1 - On-Highway Equipment (Table B3)", "", "", "", "", "", "", ""], ["", "", "Preferred Addresses - Industry Group 2 - Agricultural and Forestry Equipment (Table B4)", "", "", "", "", "", "", ""], ["", "", "Preferred Addresses - Industry Group 3 - Construction Equipment (Table B5)", "", "", "", "", "", "", ""], ["", "", "Preferred Addresses - Industry Group 4 - Marine Equipment (Table B6)", "", "", "", "", "", "", ""], ["", "", "Preferred Addresses - Industry Group 5 - Industrial, Process Control, Stationary Equipment (Table B7)", "", "", "", "", "", "", ""]]}, {"name": "Abbreviations", "dimension": "A1:C42", "rows": [["Abbreviations", "", "", "", "", "", "", "", "", ""], ["Refer to SAE J1939 document or other referenced standard document for abbreviations not defined in this document.", "", "", "", "", "", "", "", "", ""], ["Return To Documentation Tab", "", "", "", "", "", "", "", "", ""], ["Revised", "Abbreviation", "Definition", "", "", "", "", "", "", ""], ["", "A", "Ampere", "", "", "", "", "", "", ""], ["", "AC", "Alternating Current", "", "", "", "", "", "", ""], ["", "ACC", "Adaptive Cruise Control or Autonomous Cruise Control", "", "", "", "", "", "", ""], ["", "AEBS", "Advanced Emergency Braking System", "", "", "", "", "", "", ""], ["", "ASSC", "Active Steering System Controls", "", "", "", "", "", "", ""], ["", "ATA", "American Trucking Association", "", "", "", "", "", "", ""], ["", "ATC", "Automatic Traction Control", "", "", "", "", "", "", ""], ["", "CTI", "Central Tire Inflation", "", "", "", "", "", "", ""], ["", "DOT", "Department of Transportation", "", "", "", "", "", "", ""], ["", "DPF", "Diesel Particulate Filter", "", "", "", "", "", "", ""], ["", "EBS", "Electronic Braking System or Electronically Controlled Braking System", "", "", "", "", "", "", ""], ["", "ECBS", "Electronically Controlled Braking System", "", "", "", "", "", "", ""], ["", "EGR", "Exhaust Gas Recirculation", "", "", "", "", "", "", ""], ["", "ELD", "Electronic Logging Device", "", "", "", "", "", "", ""], ["", "FMS", "Fleet Management System", "", "", "", "", "", "", ""], ["", "HMI", "Human Machine Interface", "", "", "", "", "", "", ""]]}, {"name": "Revision Column Definition", "dimension": "B1:G64", "rows": [["", "", "Interpreting the Revision Columns on the 'SPs & PGs' Worksheet", "", "", "", "", "", "", ""], ["", "", "This information is intended to help the user understand each of the revision indicator columns on the 'SPs & PGs' worksheet and understand the meanings of different combinations of revision indications in these columns in a worksheet row.", "", "", "", "", "", "", ""], ["", "1.", "INDIVIDUAL 'SPs & PGs' REVISION INDICATORS", "", "", "", "", "", "", ""], ["", "1.1.", "Revised Column", "", "", "", "", "", "", ""], ["", "", "Indicates a revision has been made to the PG, SP, and/or SP position data since the last publication of the digital annex. There will be an '(R)' indication in this column if there is an '(R)' indication in at least one of the other revision columns - 'PG R...", "", "", "", "", "", "", ""], ["", "1.2.", "PG Revised Column", "", "", "", "", "", "", ""], ["", "", "Indicates a revision has been made to the PG since the last publication of the digital annex.  An '(R)' in this column means the PG is newly assigned or the definition details of an existing PG were modified.  An existing PG will be marked as revised if (1)...", "", "", "", "", "", "", ""], ["", "", "    -  PG Label", "", "", "", "", "", "", ""], ["", "", "    -  PG Acronym", "", "", "", "", "", "", ""], ["", "", "    -  PG Description", "", "", "", "", "", "", ""], ["", "", "    -  PG Data Length", "", "", "", "", "", "", ""], ["", "", "    -  PG Data Length Class", "", "", "", "", "", "", ""], ["", "", "    -  PG Data Length Constraint", "", "", "", "", "", "", ""], ["", "", "    -  PG Data Minimum Length", "", "", "", "", "", "", ""]]}, {"name": "SAE J1939DA Schema Changes", "dimension": "B1:E112", "rows": [["", "", "SAE J1939DA Workbook Schema Change History", "", "", "", "", "", "", ""], ["", "", "This worksheet describes schema changes made to the SAE J1939DA workbook.  The change history is presented to especially help users that programmatically parse the SAE J1939 worksheets.  The SAE J1939DA schema refers to the collection of worksheets in the w...", "", "", "", "", "", "", ""], ["", "", "", "Table 1 - SAE J1939DA Schema Changes History", "", "", "", "", "", ""], ["", "", "", "Table 2 - Upcoming SAE J1939DA Schema Changes", "", "", "", "", "", ""], ["", "1.", "SCHEMA CHANGE HISTORY", "", "", "", "", "", "", ""], ["", "1.1.", "Schema Version Column", "", "", "", "", "", "", ""], ["", "", "The SAE J1939DA schema version described in the change history row.", "", "", "", "", "", "", ""], ["", "1.2.", "Changes Description Column", "", "", "", "", "", "", ""], ["", "", "Describes the schema changes made from the previous schema version.  Described changes include changes to worksheets in the workbook, worksheet names, worksheet columns, column titles, and column data presentation.", "", "", "", "", "", "", ""], ["", "1.3.", "Change Date Column", "", "", "", "", "", "", ""], ["", "", "The date when the schema changes were first introduced into SAE J1939DA.", "", "", "", "", "", "", ""]]}, {"name": "SPs & PGs", "dimension": "A1:AR34477", "rows": [["SPs and PGs", "", "", "", "", "", "", "", "", ""], ["All SP and PG assignments.  The complete technical definition details are provided for most of the SPs and PGs.  If the technical definition details for an SP or a PG are not provided on this tab, then refer to the documentation specified in the \"SP Documen...", "", "", "", "", "", "", "Some information in cells may not be visible due to the size of the cell. Expansion of the cell, particularly in the description columns, may be necessary to view the complete contents.", "", ""], ["Return To Documentation Tab", "", "", "", "", "", "", "", "", ""], ["Revised", "PG Revised", "SP Revised", "SP to PG Map Revised", "PGN", "PG Label", "PG Acronym", "PG Description", "PDU Type", "PGN Page"], ["", "", "", "", "0", "Torque/Speed Control 1", "TSC1", "NOTE - Retarder can be disabled by commanding a torque limit of 0%.  Use of the limit mode allows the use of the retarder only up to the limit specified in the request.  This can be used to permit retarding of up to 50%, for example, if that limit is requir...", "PDU1", "Page 0"], ["", "", "", "", "0", "Torque/Speed Control 1", "TSC1", "NOTE - Retarder can be disabled by commanding a torque limit of 0%.  Use of the limit mode allows the use of the retarder only up to the limit specified in the request.  This can be used to permit retarding of up to 50%, for example, if that limit is requir...", "PDU1", "Page 0"], ["", "", "", "", "0", "Torque/Speed Control 1", "TSC1", "NOTE - Retarder can be disabled by commanding a torque limit of 0%.  Use of the limit mode allows the use of the retarder only up to the limit specified in the request.  This can be used to permit retarding of up to 50%, for example, if that limit is requir...", "PDU1", "Page 0"], ["", "", "", "", "0", "Torque/Speed Control 1", "TSC1", "NOTE - Retarder can be disabled by commanding a torque limit of 0%.  Use of the limit mode allows the use of the retarder only up to the limit specified in the request.  This can be used to permit retarding of up to 50%, for example, if that limit is requir...", "PDU1", "Page 0"], ["", "", "", "", "0", "Torque/Speed Control 1", "TSC1", "NOTE - Retarder can be disabled by commanding a torque limit of 0%.  Use of the limit mode allows the use of the retarder only up to the limit specified in the request.  This can be used to permit retarding of up to 50%, for example, if that limit is requir...", "PDU1", "Page 0"], ["", "", "", "", "0", "Torque/Speed Control 1", "TSC1", "NOTE - Retarder can be disabled by commanding a torque limit of 0%.  Use of the limit mode allows the use of the retarder only up to the limit specified in the request.  This can be used to permit retarding of up to 50%, for example, if that limit is requir...", "PDU1", "Page 0"], ["", "", "", "", "0", "Torque/Speed Control 1", "TSC1", "NOTE - Retarder can be disabled by commanding a torque limit of 0%.  Use of the limit mode allows the use of the retarder only up to the limit specified in the request.  This can be used to permit retarding of up to 50%, for example, if that limit is requir...", "PDU1", "Page 0"], ["", "", "", "", "0", "Torque/Speed Control 1", "TSC1", "NOTE - Retarder can be disabled by commanding a torque limit of 0%.  Use of the limit mode allows the use of the retarder only up to the limit specified in the request.  This can be used to permit retarding of up to 50%, for example, if that limit is requir...", "PDU1", "Page 0"], ["", "", "", "", "0", "Torque/Speed Control 1", "TSC1", "NOTE - Retarder can be disabled by commanding a torque limit of 0%.  Use of the limit mode allows the use of the retarder only up to the limit specified in the request.  This can be used to permit retarding of up to 50%, for example, if that limit is requir...", "PDU1", "Page 0"], ["", "", "", "", "0", "Torque/Speed Control 1", "TSC1", "NOTE - Retarder can be disabled by commanding a torque limit of 0%.  Use of the limit mode allows the use of the retarder only up to the limit specified in the request.  This can be used to permit retarding of up to 50%, for example, if that limit is requir...", "PDU1", "Page 0"], ["", "", "", "", "0", "Torque/Speed Control 1", "TSC1", "NOTE - Retarder can be disabled by commanding a torque limit of 0%.  Use of the limit mode allows the use of the retarder only up to the limit specified in the request.  This can be used to permit retarding of up to 50%, for example, if that limit is requir...", "PDU1", "Page 0"], ["", "", "", "", "0", "Torque/Speed Control 1", "TSC1", "NOTE - Retarder can be disabled by commanding a torque limit of 0%.  Use of the limit mode allows the use of the retarder only up to the limit specified in the request.  This can be used to permit retarding of up to 50%, for example, if that limit is requir...", "PDU1", "Page 0"], ["", "", "", "", "0", "Torque/Speed Control 1", "TSC1", "NOTE - Retarder can be disabled by commanding a torque limit of 0%.  Use of the limit mode allows the use of the retarder only up to the limit specified in the request.  This can be used to permit retarding of up to 50%, for example, if that limit is requir...", "PDU1", "Page 0"], ["", "", "", "", "256", "Transmission Control 1", "TC1", "Messages that are requesting control over the receiving device are transmitted at high rate only during the time when the control is active, but may be optionally sent at a slow rate as a \"heartbeat.\"", "PDU1", "Page 0"], ["", "", "", "", "256", "Transmission Control 1", "TC1", "Messages that are requesting control over the receiving device are transmitted at high rate only during the time when the control is active, but may be optionally sent at a slow rate as a \"heartbeat.\"", "PDU1", "Page 0"], ["", "", "", "", "256", "Transmission Control 1", "TC1", "Messages that are requesting control over the receiving device are transmitted at high rate only during the time when the control is active, but may be optionally sent at a slow rate as a \"heartbeat.\"", "PDU1", "Page 0"]]}, {"name": "SLOTs", "dimension": "A1:P440", "rows": [["SLOTs", "", "", "", "", "", "", "", "", ""], ["This listing of all SLOTs for SAE J1939 SPs.  SLOT is the acronym for Scaling, Length, Offset and Transfer function.\nNote that there are some SLOT names with (obs) at the end.  These SLOTs are unable to exactly represent a zero crossing due to the assigned ...", "", "", "", "", "", "", "", "", ""], ["Return To Documentation Tab", "", "", "", "", "", "", "", "", ""], ["Revised", "SLOT Identifier", "SLOT Name", "SLOT Type", "Scaling", "Range", "Offset", "Length", "Unit", "Transfer Function\nType"], ["", "202", "Diagnostic", "Diagnostic only", "", "", "", "", "", "diagnostic_only"], ["", "414", "SAEaa01", "Angular Acceleration", "1 rpm/s per bit", "0 to 64 255 rpm/s", "0 rpm/s", "2 bytes", "rpm/s", "numeric"], ["", "115", "SAEac01(obs)", "Acceleration", "0.000 488 281 25 m/s² per bit", "-15.687 to 15.687 511 718 75 m/s²", "-15.687 m/s²", "2 bytes", "m/s²", "numeric"], ["", "140", "SAEac02", "Acceleration", "0.1 m/s² per bit", "-12.5 to 12.5 m/s²", "-12.5 m/s²", "1 byte", "m/s²", "numeric"], ["", "303", "SAEac03", "Acceleration", "0.01 m/s² per bit", "-320 to 322.55 m/s²", "-320 m/s²", "2 bytes", "m/s²", "numeric"], ["", "501", "SAEac04", "Acceleration", "0.000 488 281 25 m/s² per bit", "-15.686 523 437 5 to 15.687 988 281 25 m/s²", "-15.686 523 437 5 m/s²", "2 bytes", "m/s²", "numeric"], ["", "7", "SAEad01", "Angle/Direction", "0.000 000 1 deg per bit", "-210 to 211.108 121 5 deg", "-210 deg", "4 bytes", "deg", "numeric"], ["", "10", "SAEad02", "Angle/Direction", "0.1 s per bit", "-3 276.8 to 3 148.7 s", "-3 276.8 s", "2 bytes", "s", "numeric"], ["", "113", "SAEad03(obs)", "Angle/Direction", "0.000 976 562 5 rad per bit", "-31.374 to 31.375 023 437 5 rad", "-31.374 rad", "2 bytes", "rad", "numeric"], ["", "8", "SAEad04", "Angle/Direction", "0.007 812 5 deg per bit", "-200 to 301.992 187 5 deg", "-200 deg", "2 bytes", "deg", "numeric"], ["", "9", "SAEad05", "Angle/Direction", "0.007 812 5 deg per bit", "0 to 501.992 187 5 deg", "0 deg", "2 bytes", "deg", "numeric"], ["", "11", "SAEad06", "Angle/Direction", "1 deg per bit", "-125 to 125 deg", "-125 deg", "1 byte", "deg", "numeric"], ["", "136", "SAEad07", "Angle/Direction", "0.003 906 25 deg per bit", "-125 to 125.996 093 75 deg", "-125 deg", "2 bytes", "deg", "numeric"], ["", "242", "SAEad08", "Angle/Direction", "0.002 deg per bit", "-64 to 64.51 deg", "-64 deg", "2 bytes", "deg", "numeric"], ["", "244", "SAEad09", "Angle/Direction", "0.1 deg per bit", "-12.5 to 12.5 deg", "-12.5 deg", "1 byte", "deg", "numeric"], ["", "248", "SAEad10", "Angle/Direction", "0.5 deg per bit", "-65 to 60 deg", "-65 deg", "1 byte", "deg", "numeric"]]}, {"name": "Manufacturer IDs (B10)", "dimension": "A1:E1654", "rows": [["Manufacturer ID Codes (Table B10)", "", "", "", "", "", "", "", "", ""], ["The list of all Manufacturer Identifier code assignments.", "", "", "", "", "", "", "", "", ""], ["Return To Documentation Tab", "", "", "", "", "", "", "", "", ""], ["Revised", "Mfr ID", "Manufacturer", "Location", "Date Created or Last Modified", "", "", "", "", ""], ["", "0", "For experimental or developmental use only.", "", "45967", "", "", "", "", ""], ["", "1", "Bendix Commercial Vehicle Systems LLC (formerly Allied Signal Inc.)", "Elyria, OH   USA", "41453", "", "", "", "", ""], ["", "2", "Allison Transmission, Inc.", "Indianapolis, IN   USA", "42122", "", "", "", "", ""], ["", "3", "Ametek, US Gauge Division", "Sellersville, PA   USA", "", "", "", "", "", ""], ["", "4", "Ametek-Dixson", "Grand Junction, CO   USA", "", "", "", "", "", ""], ["", "5", "AMP Inc.", "Harrisburg, PA   USA", "", "", "", "", "", ""], ["", "6", "Berifors Electronics AB", "Stockholm, Sweden", "", "", "", "", "", ""], ["", "7", "Case Corp.", "Burr Ridge, IL   USA", "", "", "", "", "", ""], ["", "8", "Caterpillar Inc.", "Peoria, IL   USA", "", "", "", "", "", ""], ["", "9", "Chrysler Corp.", "Auburn Hills, MI   USA", "", "", "", "", "", ""], ["", "10", "Cummins Inc (formerly Cummins Engine Co)", "Columbus, IN   USA", "", "", "", "", "", ""], ["", "11", "Dearborn Group Inc.", "Indianapolis, IN & Farmington Hills, MI   USA", "", "", "", "", "", ""], ["", "12", "Deere & Company, Precision Farming", "East Moline, IL   USA", "", "", "", "", "", ""], ["", "13", "Delco Electronics", "Kokomo, IN   USA", "", "", "", "", "", ""], ["", "14", "Detroit Diesel Corporation", "Detroit, MI   USA", "", "", "", "", "", ""], ["", "15", "DICKEY-john Corporation", "Auburn, IL   USA", "42212", "", "", "", "", ""]]}, {"name": "Global Source Addresses (B2)", "dimension": "A1:E113", "rows": [["Preferred Addresses:  Industry Group 0 -  Global  (Table B2)", "", "", "", "", "", "", "", "", ""], ["List of the Preferred Addresses in the range of 0 to 127 and 248 to 255.  These Preferred Addresses apply across all Industry Groups.  Preferred Addresses 128 thru 247 are Industry Group specific. See the tabs associated with Tables B3 thru B9. The J1939 Co...", "", "", "", "", "", "", "", "", ""], ["Return To Documentation Tab", "", "", "", "", "", "", "", "", ""], ["Revised", "Source Address ID", "Name", "Notes", "Date Created or Last Modified", "", "", "", "", ""], ["", "0", "Engine #1", "The #1 on the Engine CA is to identify that this is the first PA being used for the particular function, Engine. It may only be used for the NAME Function of 0, Function Instance 0, and an ecu instance of 0, which is commonly known as the “first engine”.", "", "", "", "", "", ""], ["", "1", "Engine #2", "The #2 on the Engine CA is to identify that this is the second PA available for use for the  function, Engine. It may be used by the “second” engine (Function 0, Function Instance 1, ECU Instance 0), but it may also be used by the second ecu on the first en...", "", "", "", "", "", ""], ["", "2", "Turbocharger", "Turbocharger used on the engine.  May only be used for the NAME Function of 133, Industry Group 0, Vehicle System 0.", "38036", "", "", "", "", ""], ["", "3", "Transmission #1", "The first transmission - may only be used for the NAME Function of 3, Function Instance 0, and an ecu instance of 0.", "", "", "", "", "", ""], ["", "4", "Transmission #2", "The second PA available for use for the function, Transmission. It may be used by the “second” transmission (Function 3, Function Instance 1, ECU Instance 0), but it may also be used by the second ecu on the first transmission (Function 3, Function Instance...", "", "", "", "", "", ""], ["", "5", "Shift Console - Primary", "The shift console mounted in the normal drivers position", "", "", "", "", "", ""], ["", "6", "Shift Console - Secondary", "A shift console mounted remotely from the normal drivers position (May not be used for any ecu instances of the primary shift console)", "", "", "", "", "", ""], ["", "7", "Power TakeOff - (Main or Rear)", "", "", "", "", "", "", ""], ["", "8", "Axle - Steering", "", "", "", "", "", "", ""], ["", "9", "Axle - Drive #1", "The first drive axle - may only be used for the NAME Function of 8, Function Instance 0, and an ecu instance of 0.", "", "", "", "", "", ""], ["", "10", "Axle - Drive #2", "The second PA available for use for the  function, Axle, Drive. It may be used by the “second” drive axle (Function 8, Function Instance 1, ECU Instance 0), but it may also be used by the second ecu on the first drive axle (Function 8, Function Instance 0, ...", "", "", "", "", "", ""], ["", "11", "Brakes - System Controller", "", "", "", "", "", "", ""], ["", "12", "Brakes - Steer Axle", "", "", "", "", "", "", ""], ["", "13", "Brakes - Drive axle #1", "The brakes on the first drive axle - may only be used for the NAME Function of 11, Function Instance 0, and an ecu instance of 0.", "", "", "", "", "", ""], ["", "14", "Brakes - Drive Axle #2", "The second PA available for use for the function, Brakes on a Drive Axle. It may be used by the “second” drive axle brakes (Function 11, Function Instance 1, ECU Instance 0), but it may also be used by the second ecu on the first drive axle brakes (Function...", "", "", "", "", "", ""], ["", "15", "Retarder - Engine", "Engine Compression Braking", "", "", "", "", "", ""]]}, {"name": "Global NAME Functions (B11)", "dimension": "A1:E100", "rows": [["All Industry Groups Inclusive NAME Functions  (Table B11)", "", "", "", "", "", "", "", "", ""], ["The NAME Functions assigned to the lower 128 Function values.  These lower 128 NAME Function values are independent of the Vehicle System or Industry Group, which means they can be used all eight Industry Groups.  These should not be confused with the upper...", "", "", "", "", "", "", "", "", ""], ["Return To Documentation Tab", "", "", "", "", "", "", "", "", ""], ["Revised", "Function ID", "Function Description", "Notes", "Date Created or Last Modified", "", "", "", "", ""], ["", "0", "Engine", "While the function identifies what is typically the mechanical power source of the machine, the reference tends to be to the management system that controls the torque vs speed vs command (typically throttle) of said power source.", "", "", "", "", "", ""], ["", "1", "Auxiliary Power Unit (APU)", "Power source for operating systems without the use of the prime ‘drive’ engine.", "", "", "", "", "", ""], ["", "2", "Electric Propulsion Control", "Control system which operates the drive mechanism when it is electrically powered, such as battery-motor, or engine-generator-motor hybrids", "", "", "", "", "", ""], ["", "3", "Transmission", "A mechanical system for alter the speed vs torque output of the engine to a level usable by another system on the machine.  Although again the network reference is actually to the system which controls the operation of said transmission.", "", "", "", "", "", ""], ["", "4", "Battery Pack Monitor", "Monitors the condition - charge, temperature, power remaining, etc. for an internal battery pack - typically used with electric propulsion", "", "", "", "", "", ""], ["", "5", "Shift Control/Console", "The device which determines and transmit onto the network the gear, the range, the operating mode or any or all of these that the operator desires for the transmission. (Not to be confused with transmission control which is Transmission)", "", "", "", "", "", ""], ["", "6", "Power TakeOff - (Main or Rear)", "The system which controls the mechanical power derived from a prime engine and used to operate auxiliary items such as compressors in on highway vehicles and such as implements in ag applications.  This being the main or rear unit.", "", "", "", "", "", ""], ["", "7", "Axle - Steering", "Adjust attack angle as function of steering", "", "", "", "", "", ""], ["", "8", "Axle - Drive", "", "", "", "", "", "", ""], ["", "9", "Brakes - System Controller", "Controls service braking system electronically – might be any of a number of schemes – may also control (at least partly) the endurance braking system in the sense of an integrated control (application phased in with the service braking system).", "", "", "", "", "", ""], ["", "10", "Brakes - Steer Axle", "Control for actuating the service brakes on a steered axle", "", "", "", "", "", ""], ["", "11", "Brakes - Drive axle", "Control for actuating the service brakes on a drive axle", "", "", "", "", "", ""], ["", "12", "Retarder - Engine", "The control for the retarder capabilities of the engine. There are several types of retarders possible and these are defined within the parameter - Retarder Type, (SPN 901).", "", "", "", "", "", ""], ["", "13", "Retarder - Driveline", "The control for the retarder capabilities of the driveline. There are several types of retarders possible and these are defined within the parameter - Retarder Type, (SPN 901).", "", "", "", "", "", ""], ["", "14", "Cruise Control", "Control system for maintaining the vehicle’s speed at a fixed operator selectable value with various over-rides linked to other systems", "", "", "", "", "", ""], ["", "15", "Fuel System", "Controls fuel flow from the tank to the filter to the water-removal/separator to the engine and then back to the tank.", "", "", "", "", "", ""]]}, {"name": "IG Specific NAME Function (B12)", "dimension": "A1:H290", "rows": [["Industry Group and Vehicle System Dependent NAME Functions  (Table B12)", "", "", "", "", "", "", "", "", ""], ["The NAME Functions assignments for the upper 128 Function values and the Industry Group specific Vehicle System assignments.  The NAME Functions in the upper 128 NAME Function values are dependent upon the Industry Group and the Vehicle System values in NAM...", "", "", "", "", "", "", "", "", ""], ["Return To Documentation Tab", "", "", "", "", "", "", "", "", ""], ["Revised", "Industry Group ID", "Vehicle System ID", "Vehicle System Description", "Function ID", "Function Description", "Notes", "Date Created or Last Modified", "", ""], ["", "0", "0", "Non-specific System", "128", "Reserved", "", "", "", ""], ["", "0", "0", "Non-specific System", "129", "Off-board diagnostic-service tool", "", "", "", ""], ["", "0", "0", "Non-specific System", "130", "On-board data logger", "", "", "", ""], ["", "0", "0", "Non-specific System", "131", "PC Keyboard", " A user interface similar to a PC keyboard.", "38035", "", ""], ["", "0", "0", "Non-specific System", "132", "Safety Restraint System", "The safety restraint system can be for controlling  activation of airbags, belt tensioners, roll over protection systems, etc.", "38035", "", ""], ["", "0", "0", "Non-specific System", "133", "Turbocharger", "Turbocharger used on the engine.", "38035", "", ""], ["", "0", "0", "Non-specific System", "134", "Ground based speed sensor", "Measures actual ground speed of a vehicle with a device such as radar or other such devices.", "38673", "", ""], ["", "0", "0", "Non-specific System", "135", "Keypad", "An operator input device used to control machine functions or provide data.", "38673", "", ""], ["", "0", "0", "Non-specific System", "136", "Humidity sensor", "Device which measures air humidity", "38757", "", ""], ["", "0", "0", "Non-specific System", "137", "Thermal Management System Controller", "This device controls all devices that may be used in a thermal management system including Jacket Water Cooling, Charged Air Cooling, Transmission Cooling, Electronics Cooling, Aux Oil Cooling, etc.", "38757", "", ""], ["", "0", "0", "Non-specific System", "138", "Brake Stroke Alert", "The device that evaluates air brake stroke for normal stroke, over stroke, dragging brake, or a non-functioning brake actuator and is permanently mounted on the vehicle.", "39135", "", ""], ["", "0", "0", "Non-specific System", "139", "On-board axle group scale", "The device that determines axle group weights and is permanently mounted on the vehicle.", "41333", "", ""], ["", "0", "0", "Non-specific System", "140", "On-board axle group display", "The device that displays axle group weights and may be permanently mounted on the vehicle.  Additionally it provides for entry of calibration and other data related to the operation of an on-board scale.", "41333", "", ""], ["", "0", "0", "Non-specific System", "141", "Battery Charger", "A device used to charge batteries in a vehicle from an off-board source of electrical energy.", "39401", "", ""], ["", "0", "0", "Non-specific System", "142", "Turbocharger Compressor Bypass", "Device used to control the flow across the Compressor Bypass", "39591", "", ""], ["", "0", "0", "Non-specific System", "143", "Turbocharger Wastegate", "Device used to control the position of the Wastegate to adjust the exhaust flow.", "39591", "", ""]]}, {"name": "Industry Groups (B1)", "dimension": "A1:E12", "rows": [["Industry Groups (IG) (Table B1)", "", "", "", "", "", "", "", "", ""], ["List of Industry Group enumerations.", "", "", "", "", "", "", "", "", ""], ["Return To Documentation Tab", "", "", "", "", "", "", "", "", ""], ["Revised", "Industry Group ID", "Industry Group Description", "Notes", "Date Created or Last Modified", "", "", "", "", ""], ["", "0", "Global, applies to all", "", "36069", "", "", "", "", ""], ["", "1", "On-Highway Equipment", "", "36069", "", "", "", "", ""], ["", "2", "Agricultural and Forestry Equipment", "", "36069", "", "", "", "", ""], ["", "3", "Construction Equipment", "", "36069", "", "", "", "", ""], ["", "4", "Marine", "", "36069", "", "", "", "", ""], ["", "5", "Industrial-Process Control-Stationary (Gen-Sets)", "", "36069", "", "", "", "", ""], ["", "6", "Reserved for future assignment by SAE", "", "36656", "", "", "", "", ""], ["", "7", "Reserved for future assignment by SAE", "", "36656", "", "", "", "", ""]]}, {"name": "IG1 Source Addresses (B3)", "dimension": "A1:E78", "rows": [["Preferred Addresses:  Industry Group 1 -  On-Highway Equipment  (Table B3)", "", "", "", "", "", "", "", "", ""], ["The Preferred Source Addresses for Industry Group 1 (On-Highway Equipment).  The J1939 Committee is discontinuing the assignment of Industry Group Preferred Addresses.  Applications should be developed to be Arbitrary Address Capable and use Address Claim t...", "", "", "", "", "", "", "", "", ""], ["Return To Documentation Tab", "", "", "", "", "", "", "", "", ""], ["Revised", "Source Address ID", "Name", "Notes", "Date Created or Last Modified", "", "", "", "", ""], ["", "128", "thru 155 are reserved for future assignment by SAE but available for use by self configurable ECUs", "Used for dynamic address assignment", "42054", "", "", "", "", ""], ["", "156", "Automated Driving Controller 2", "Second Automated Driving Controller _x000D_\n_x000D_\nNotes: The hardware and software that are collectively capable of performing some or all of the dynamic driving task on a sustained basis, regardless of whether it is limited to a specific operational desi...", "44147", "", "", "", "", ""], ["", "157", "Electric Propulsion Control Unit #3", "Third on-board device converting torque commands to current commands in an electric vehicle system.   Note that some applications have used SA 241 for this purpose.", "43699", "", "", "", "", ""], ["", "158", "Automated Driving Controller 1", "Automated Driving Controller_x000D_\n_x000D_\nNotes: The hardware and software that are collectively capable of performing some or all of the dynamic driving task on a sustained basis, regardless of whether it is limited to a specific operational design domai...", "44147", "", "", "", "", ""], ["", "159", "Roadway Information System", "Controller applications that use this source address will provide information relevant to the roadway in which the vehicle is traveling. This includes items such as intersections, grade, speed limit, number of lanes, location of fueling stations, etc. The r...", "42054", "", "", "", "", ""], ["", "160", "Advanced emergency braking system", "A system which can detect a potential forward collision and automatically activate the vehicle braking system to decelerate the vehicle with the purpose of avoiding or mitigating a collision.", "40395", "", "", "", "", ""], ["", "161", "Fifth Wheel Smart Systems", "Any systems relative to the operation & status/safety monitoring of the fifth  wheel coupler system (including mounting bracket).", "38125", "", "", "", "", ""], ["", "162", "Slope Sensor", "A device that measures the slope along an axis.", "38125", "", "", "", "", ""], ["", "163", "Catalyst Fluid Sensor", "The Catalyst Fluid Sensor can measure the catalyst fluid temperature, the catalyst fluid level and the catalyst fluid quality.", "38035", "", "", "", "", ""], ["", "164", "On Board Diagnostic Unit #2", "Controller used to report On Board Diagnostics", "37476", "", "", "", "", ""], ["", "165", "Rear Steering Axle Controller #2", "Rear steering controller 2 for axle group", "37476", "", "", "", "", ""], ["", "166", "Rear Steering Axle Controller #3", "Rear steering controller 3 for axle group", "37476", "", "", "", "", ""], ["", "167", "Instrument Cluster #2", "A second optional, or auxiliary, gauge display for a vehicle", "36937", "", "", "", "", ""], ["", "168", "Trailer #5 Bridge", "Bridge for fifth towed Vehicle System (e.g. trailer or dolly)", "", "", "", "", "", ""], ["", "169", "Trailer #5 Lighting-electrical", "", "", "", "", "", "", ""], ["", "170", "Trailer #5 Brakes (ABS-EBS)", "", "", "", "", "", "", ""]]}, {"name": "IG2 Source Addresses (B4)", "dimension": "A1:I16", "rows": [["Preferred Addresses:  Industry Group 2 -  Agricultural and Forestry Equipment  (Table B4)", "", "", "", "", "", "", "", "", ""], ["The Preferred Source Addresses assignments for Industry Group 2 (Agricultural and Forestry Equipement).  The J1939 Committee is discontinuing the assignment of Industry Group Preferred Addresses.  Applications should be developed to be Arbitrary Address Cap...", "", "", "", "", "", "", "", "", ""], ["Return To Documentation Tab", "", "", "", "", "", "", "", "", ""], ["Revised", "Source Address ID", "Device Class", "Device Class Instance", "Function", "Description", "Function Instance", "ECU Instance", "Date Created or Last Modified", ""], ["", "128", "", "", "thru 236 are reserved for future assignment by ISO", "All devices in IG2 using preferred addresses shall be self-configurable.  IG2 devices shall include the value of the first full 32 bits of NAME field.", "", "", "37255", ""], ["", "237", "0", "0", "TIM Server", "Control function that represents a Tractor Implement Management (TIM) Server.  TIM is an Operator Assistance System that enables TIM clients to request the control of certain TIM functions (for example speed, steering, hitch, PTO, hydraulic valves, etc.) fr...", "0", "0", "43321", ""], ["", "238", "0", "0", "Sequence Controller", "The master in the Sequence Control System as defined in ISO11783-14", "0", "0", "42313", ""], ["", "239", "0", "0", "Position Control", "Multiple axis position control of a devices movable device elements", "0", "0", "42313", ""], ["", "240", "0", "0", "Tractor ECU", "A gateway (see ISO 11783-4) between the tractor and the implement bus representing the tractor and its messages on the 11783 network", "0", "0", "42313", ""], ["", "241", "7", "0", "Tailings Monitoring", "Monitoring of the quantity of unthreshed material returned to threshing machine", "0", "0", "42313", ""], ["", "242", "7", "0", "Header Control", "Control of the headers reel rate and material delivery rate", "0", "0", "42313", ""], ["", "243", "7", "0", "Product Loss Monitoring", "Monitoring of the amount of produce being lost from e.g. a harvesting process", "0", "0", "42313", ""], ["", "244", "7", "0", "Product Moisture Sensing", "Monitoring of the produce moisture content", "0", "0", "42313", ""], ["", "245", "0", "0", "Non Virtual Terminal Display (Implement Bus)", "A non Virtual Terminal cab display connected to the implement bus", "0", "0", "37169", ""], ["", "246", "0", "0", "Operator Controls - Machine Specific", "Non auxiliary operator control inputs ", "0", "0", "42313", ""], ["", "247", "0", "0", "Task Control (Mapping Computer)", "A control function on the 11783 network that is responsible for the sending, receiving and logging of process data", "0", "0", "42313", ""]]}, {"name": "IG3 Source Addresses (B5)", "dimension": "A1:E30", "rows": [["Preferred Addresses:  Industry Group 3 -  Construction Equipment  (Table B5)", "", "", "", "", "", "", "", "", ""], ["The Preferred Source Addresses for Industry Group 3 (Construction Equipment).  The J1939 Committee is discontinuing the assignment of Industry Group Preferred Addresses.  Applications should be developed to be Arbitrary Address Capable and use Address Claim...", "", "", "", "", "", "", "", "", ""], ["Return To Documentation Tab", "", "", "", "", "", "", "", "", ""], ["Revised", "Source Address ID", "Name", "Notes", "Date Created or Last Modified", "", "", "", "", ""], ["", "128", "thru 207 are reserved for future assignment by SAE", "Used for dynamic address assignment (self-configurable)", "37255", "", "", "", "", ""], ["", "208", "thru 223 are reserved for future assignment", "Used for individual preassigned addresses", "37255", "", "", "", "", ""], ["", "224", "Rotation Sensor", "A device that measures the rotational angle around an axis.", "38035", "", "", "", "", ""], ["", "225", "Lift Arm Controller", "Controls the lift arms and tilt functions on a construction loader, skid steer loader, or similar machine.  Refers to the main elevation and tilt functions of the machine's lift arms but may not include the control of the attachment itself.", "36748", "", "", "", "", ""], ["", "226", "Slope Sensor", "A device that measures the slope along an axis.", "36475", "", "", "", "", ""], ["", "227", "Main Controller - Skid Steer Loader", "Primary system controller for skid steer loader", "36281", "", "", "", "", ""], ["", "228", "Loader Control", "Controls the hydraulic system of the loader attachment of a loader/backhoe, wheel loader, skid steer, or similar vehicle", "36211", "", "", "", "", ""], ["", "229", "Laser Tracer", "A device that receives a laser strike and reports the vertical and horizontal position.", "", "", "", "", "", ""], ["", "230", "Land Leveling System Display", "This device displays position information at a remote location.", "", "", "", "", "", ""], ["", "231", "Single Land Leveling System Supervisor", "This device is the Land Leveling System Supervisor for a single control loop.", "", "", "", "", "", ""], ["", "232", "Land Leveling Electric Mast", "A device that moves a Sensor to maintain a specific position.", "", "", "", "", "", ""], ["", "233", "Single Land Leveling System Operator Interface", "A component that allows the user to control the Land Leveling System and display information about the operation of the system.", "", "", "", "", "", ""], ["", "234", "Laser Receiver", "A device that receives a laser strike, and reports the specific position.", "", "", "", "", "", ""], ["", "235", "Supplemental Sensor Processing Unit #1", "", "", "", "", "", "", ""], ["", "236", "Supplemental Sensor Processing Unit #2", "", "", "", "", "", "", ""], ["", "237", "Supplemental Sensor Processing Unit #3", "", "", "", "", "", "", ""]]}, {"name": "IG4 Source Addresses (B6)", "dimension": "A1:E26", "rows": [["Preferred Addresses:  Industry Group 4 -  Marine Equipment  (Table B6)", "", "", "", "", "", "", "", "", ""], ["The Preferred Source Addresses for Industry Group 4 (Marine Equipment).  The J1939 Committee is discontinuing the assignment of Industry Group Preferred Addresses.  Applications should be developed to be Arbitrary Address Capable and use Address Claim to cl...", "", "", "", "", "", "", "", "", ""], ["Return To Documentation Tab", "", "", "", "", "", "", "", "", ""], ["Revised", "Source Address ID", "Name", "Notes", "Date Created or Last Modified", "", "", "", "", ""], ["", "128", "thru 207 are reserved for future assignment by SAE", "Used for dynamic address assignment (self-configurable)", "37255", "", "", "", "", ""], ["", "208", "thru 227 are reserved for future assignment", "Used for individual preassigned addresses", "37255", "", "", "", "", ""], ["", "228", "Propulsion Sensor Hub & Gateway #1", "The first device that interfaces with propulsion sensors and acts as a gateway to other networks in the system.", "42866", "", "", "", "", ""], ["", "229", "Propulsion Sensor Hub & Gateway #2", "The second device that interfaces with propulsion sensors and acts as a gateway to other networks in the system.", "42866", "", "", "", "", ""], ["", "230", "Propulsion Sensor Hub & Gateway #3", "The third device that interfaces with propulsion sensors and acts as a gateway to other networks in the system.", "42866", "", "", "", "", ""], ["", "231", "Propulsion Sensor Hub & Gateway #4", "The fourth device that interfaces with propulsion sensors and acts as a gateway to other networks in the system.", "42866", "", "", "", "", ""], ["", "232", "Transmission #3", "The Transmission ECU for the third transmission within a system", "41046", "", "", "", "", ""], ["", "233", "Transmission #4", "The Transmission ECU for the fourth transmission within a system", "41046", "", "", "", "", ""], ["", "234", "Transmission #5", "The Transmission ECU for the fifth transmission within a system", "41046", "", "", "", "", ""], ["", "235", "Transmission #6", "The Transmission ECU for the sixth transmission within a system", "41046", "", "", "", "", ""], ["", "236", "Display #1 for Protection System for Marine Engines", "The first ecu that provides the display of information and/or indicators associated specifically with the protection system on the first engine of a Marine System.", "37188", "", "", "", "", ""], ["", "237", "Protection System for Marine Engines", "The first ecu that controls the Protection functions on the first engine of a Marine System.", "37188", "", "", "", "", ""], ["", "238", "Alarm System Control #1 for Marine Engines", "The first ecu that controls the Alarm functions on the first engine of a Marine System.", "37188", "", "", "", "", ""], ["", "239", "Engine #3", "The Engine ECU for the third engine within a system.", "36566", "", "", "", "", ""], ["", "240", "Engine #4", "The Engine ECU for the fourth engine within a system.", "36566", "", "", "", "", ""], ["", "241", "Engine #5", "The Engine ECU for the fifth engine within a system.", "36566", "", "", "", "", ""]]}, {"name": "IG5 Source Addresses (B7)", "dimension": "A1:E24", "rows": [["Preferred Addresses:  Industry Group 5 -  Industrial, Process Control, Stationary Equipment  (Table B7)", "", "", "", "", "", "", "", "", ""], ["The Preferred Source Addresses for Industry Group 4 Industrial, Process Control, Stationary Equipment).  The J1939 Committee is discontinuing the assignment of Industry Group Preferred Addresses.  Applications should be developed to be Arbitrary Address Cap...", "", "", "", "", "", "", "", "", ""], ["Return To Documentation Tab", "", "", "", "", "", "", "", "", ""], ["Revised", "Source Address ID", "Name", "Notes", "Date Created or Last Modified", "", "", "", "", ""], ["", "128", "thru 207 are reserved for future assignment by SAE", "Used for dynamic address assignment (self-configurable)", "37255", "", "", "", "", ""], ["", "208", "thru 229 are reserved for future assignment", "Used for individual preassigned addresses", "37255", "", "", "", "", ""], ["", "230", "Generator Voltage Regulator", "The voltage regulator controls the generator output voltage", "38393", "", "", "", "", ""], ["", "231", "Engine #3", "The Engine ECU for the third engine within a system.", "36566", "", "", "", "", ""], ["", "232", "Engine #4", "The Engine ECU for the fourth engine within a system.", "36566", "", "", "", "", ""], ["", "233", "Engine #5", "The Engine ECU for the fourth engine within a system.", "36566", "", "", "", "", ""], ["", "234", "Generator Set Controller", "Used for data collection and control of a generator system", "36475", "", "", "", "", ""], ["", "235", "Supplemental Sensor Processing Unit #1", "", "", "", "", "", "", ""], ["", "236", "Supplemental Sensor Processing Unit #2", "", "", "", "", "", "", ""], ["", "237", "Supplemental Sensor Processing Unit #3", "", "", "", "", "", "", ""], ["", "238", "Supplemental Sensor Processing Unit #4", "", "", "", "", "", "", ""], ["", "239", "Supplemental Sensor Processing Unit #5", "", "", "", "", "", "", ""], ["", "240", "Supplemental Sensor Processing Unit #6", "", "", "", "", "", "", ""], ["", "241", "Engine Monitor #1", "", "", "", "", "", "", ""], ["", "242", "Engine Monitor #2", "", "", "", "", "", "", ""], ["", "243", "Engine Monitor #3", "", "", "", "", "", "", ""]]}, {"name": "Supporting Information", "dimension": "A1:B16", "rows": [["SP and PG Supporting Information", "", "", "", "", "", "", "", "", ""], ["The J1939DA Support Information document, specified below, contains additional technical information related to some SAE J1939 SPs and PGs as published in this version of the SAE J1939DA file. The PG Reference and SP Reference columns on the SPs & PGs works...", "", "", "", "", "", "", "", "", ""], ["J1939DA Support Information - APR2026.pdf", "(SPs and PGs approved through the February 2026 (1Q2026) meeting)", "", "", "", "", "", "", "", ""], ["Click file name (above) to open the Support Information file. \n(Support Information file, with above file name, must be in the \nsame folder as this J1939DA file for link to work.)", "", "", "", "", "", "", "", "", ""], ["NOTE:  Only this specified version of the J1939DA Support Information document should be used with this SAE J1939DA file. New SP and PG assignments and modifications to existing SPs and PGs can have a significant effect on the related support information.\n\n...", "", "", "", "", "", "", "", "", ""], ["Return To SPs & PGs Tab", "", "", "", "", "", "", "", "", ""]]}];
+
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+}
+function initReference(){
+  const cards=document.getElementById('referenceCards');
+  const select=document.getElementById('referenceSelect');
+  if(!cards || !select) return;
+  select.innerHTML='';
+  const groups=[];
+  referenceDocuments.forEach(doc=>{ if(!groups.includes(doc.category)) groups.push(doc.category); });
+  let cardHtml='';
+  groups.forEach(group=>{
+    cardHtml += `<div class="reference-category">${escapeHtml(group)}</div>`;
+    referenceDocuments.filter(d=>d.category===group).forEach(doc=>{
+      cardHtml += `<div class="reference-card">
+        <span class="pill gray type-pill">${escapeHtml(doc.type.toUpperCase())}</span>
+        <h3>${escapeHtml(doc.title)}</h3>
+        <p class="muted small">${escapeHtml(doc.summary)}</p>
+        <div class="row">
+          ${doc.type==='zip' ? '' : `<button class="secondary" onclick="showReferenceDocument('${doc.id}')">View</button>`}
+          <a class="link-button" href="${escapeHtml(doc.file)}" download>Download</a>
+        </div>
+      </div>`;
+      const opt=document.createElement('option');
+      opt.value=doc.id; opt.textContent=doc.title;
+      select.appendChild(opt);
+    });
+  });
+  cards.innerHTML=cardHtml;
+  showReferenceDocument(referenceDocuments[0]?.id || '');
+}
+function showReferenceDocument(id){
+  const doc=referenceDocuments.find(d=>d.id===id) || referenceDocuments[0];
+  if(!doc) return;
+  const select=document.getElementById('referenceSelect');
+  const summary=document.getElementById('referenceSummary');
+  const viewer=document.getElementById('referenceViewer');
+  const openLink=document.getElementById('referenceOpenLink');
+  const downloadLink=document.getElementById('referenceDownloadLink');
+  if(select) select.value=doc.id;
+  if(summary) summary.innerHTML=`<strong>${escapeHtml(doc.title)}</strong><br><span class="muted small">${escapeHtml(doc.summary)}</span>`;
+  if(openLink){openLink.href=doc.file; openLink.style.display=doc.type==='zip'?'none':'inline-flex';}
+  if(downloadLink){downloadLink.href=doc.file; downloadLink.download='';}
+  if(!viewer) return;
+  if(doc.type==='pdf'){
+    viewer.innerHTML=`<p class="muted small viewer-note">PDF preview. Use Open or Download if your browser does not show the embedded document.</p><iframe class="reference-frame" src="${escapeHtml(doc.file)}" title="${escapeHtml(doc.title)}"></iframe>`;
+  }else if(doc.type==='xlsx'){
+    viewer.innerHTML=`<p class="muted small viewer-note">Workbook preview shows the first rows and columns only for speed. Download the workbook for full filtering and editing in Excel.</p><div id="excelPreview"></div>`;
+    renderWorkbookPreview(0);
+  }else{
+    viewer.innerHTML=`<p class="muted small">This item is an archive package. Use Download to save the attached ZIP file.</p>`;
+  }
+}
+function renderWorkbookPreview(sheetIndex){
+  const target=document.getElementById('excelPreview');
+  if(!target) return;
+  const sheets=j1939daWorkbookPreview || [];
+  if(!sheets.length){target.innerHTML='<p class="muted">No workbook preview is available.</p>'; return;}
+  const idx=Math.max(0,Math.min(sheetIndex,sheets.length-1));
+  const sheet=sheets[idx];
+  const tabs=sheets.map((s,i)=>`<button class="excel-sheet-tab ${i===idx?'active':''}" onclick="renderWorkbookPreview(${i})">${escapeHtml(s.name)}</button>`).join('');
+  const rows=(sheet.rows||[]).map((row,r)=>`<tr>${row.map((cell,c)=> r===0 ? `<th>${escapeHtml(cell)}</th>` : `<td>${escapeHtml(cell)}</td>`).join('')}</tr>`).join('');
+  target.innerHTML=`<div class="excel-sheet-tabs">${tabs}</div><p class="muted small">Sheet: <strong>${escapeHtml(sheet.name)}</strong> | Used range: ${escapeHtml(sheet.dimension || 'unknown')} | Preview: first 20 rows, first 10 columns.</p><div class="excel-preview-table"><table>${rows || '<tr><td>No preview rows found.</td></tr>'}</table></div>`;
+}
+
 
 function exportTimestamp(){
   const d=new Date();
